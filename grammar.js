@@ -22,7 +22,7 @@ module.exports = grammar({
       $.syntax_definition, // `syntax` list(id `<` list(tparam, `,`) `>`, `,`)
       $.syntax_name, // `syntax` id
       $._line_comment,
-      // $.variable_definition, // `var` id `:` plaintyp hint*
+      $.variable_definition, // `var` id `:` plaintyp hint*
       // $.relation_definition, //`relation` id `:` nottyp hint*
       // $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
       $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
@@ -46,25 +46,29 @@ module.exports = grammar({
     ),
 
     syntax_body: $ => choice( // El.deftyp
-      // Simple assignment: syntax tid = id
-      $._plain_type,
-      // Variant definition: | variant1 | variant2  
+      // Named variants: | variant1 | variant2  
       repeat1(seq('|', $.syntax_variant)),
+      // Unnamed variant (singleton): syntax paramtyp = id dir typ (multiple types)
+      prec(2, $.unnamed_variant),
+      // Simple assignment: syntax tid = id (single type)
+      prec(1, $._plain_type),
     ),
     
+    unnamed_variant: $ => seq($._type, repeat1($._type)), // At least 2 types like "id dir typ"
+    
     syntax_variant: $ => choice( // El.typcase
-      $.constructor_id, // IntV, FIntV, etc.
-      seq($.constructor_id, repeat($._type)), // IntV int, HeaderV id (member, val)*
+      $.constructor_id, // IntT, FIntT, etc.
+      seq($.constructor_id, repeat($._type)), // IntT, FIntT nat, HeaderT id (member, typ)*
     ),
 
     _line_comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
-    // variable_definition: $ => seq(
-    //   'var',
-    //   $.identifier,
-    //   ':',
-    //   $.type,
-    //   repeat($.hint)
-    // ),
+    variable_definition: $ => seq(
+      'var',
+      $.identifier,
+      ':',
+      $._type,
+      // repeat($.hint)
+    ),
     //
     // relation_definition: $ => seq(
     //   'relation',
@@ -101,7 +105,7 @@ module.exports = grammar({
       optional($.pattern_parameter_list), // For function definitions, use patterns
       '=',
       $._expression,
-      // repeat(seq('--', $._premise))
+      repeat(seq('--', $._premise))
     ),
 
     type_parameters: $ => seq(
@@ -151,15 +155,15 @@ module.exports = grammar({
   //
   //   type_parameter: $ => $.identifier,
   //
-  //   _premise: $ => choice(
-  //     $.if_premise, // `if` exp
-  //     'otherwise',
-  //   ),
+    _premise: $ => choice(
+      $.if_premise, // `if` exp
+      'otherwise',
+    ),
   //
-  //   if_premise: $ => seq(
-  //     'if',
-  //     $._expression,
-  //   ),
+    if_premise: $ => seq(
+      'if',
+      $._expression,
+    ),
   //
   //   hint: $ => seq(
   //     'hint',
@@ -215,7 +219,7 @@ module.exports = grammar({
     // Identifier patterns for different contexts
     constructor_id: $ => /[A-Z][a-zA-Z0-9]*/, // CamelCase constructors like IntV, FIntV
     constant_id: $ => /[A-Z][A-Z0-9_]*/, // ALL_CAPS constants like PLUS, MINUS  
-    regular_id: $ => /[a-z][a-z0-9_]*/, // lowercase identifiers with snake_case like get_int, bitstr
+    regular_id: $ => /[a-z_][a-z0-9_]*/, // lowercase identifiers with snake_case like get_int, bitstr
     function_id: $ => seq('$', $.regular_id), // Function identifiers like $get_int
     
     identifier: $ => choice(
