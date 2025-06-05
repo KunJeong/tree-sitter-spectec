@@ -25,8 +25,8 @@ module.exports = grammar({
       // $.variable_definition, // `var` id `:` plaintyp hint*
       // $.relation_definition, //`relation` id `:` nottyp hint*
       // $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
-      // $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
-      // $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
+      $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
+      $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
     ),
 
     syntax_name: $ => seq(
@@ -47,14 +47,14 @@ module.exports = grammar({
 
     syntax_body: $ => choice( // El.deftyp
       // Simple assignment: syntax tid = id
-      $.plain_type,
+      $._plain_type,
       // Variant definition: | variant1 | variant2  
       repeat1(seq('|', $.syntax_variant)),
     ),
     
     syntax_variant: $ => choice( // El.typcase
-      $.identifier, // PLUS
-      seq($.identifier, repeat($._type)), // NameE id
+      $.constructor_id, // IntV, FIntV, etc.
+      seq($.constructor_id, repeat($._type)), // IntV int, HeaderV id (member, val)*
     ),
 
     _line_comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
@@ -84,26 +84,26 @@ module.exports = grammar({
   //     repeat(seq('--', $._premise))
   //   ),
   //
-  //   function_signature_definition: $ => seq(
-  //     'dec',
-  //     $.identifier,
-  //     optional($.type_parameters),
-  //     $.parameter_list,
-  //     ':',
-  //     $.type,
-  //     repeat($.hint),
-  //   ),
-  //
-  //   function_definition: $ => seq(
-  //     'def',
-  //     $.identifier,
-  //     optional($.type_parameters),
-  //     optional($.parameter_list),
-  //     '=',
-  //     $._expression,
-  //     repeat(seq('--', $._premise))
-  //   ),
-  //
+    function_signature_definition: $ => seq(
+      'dec',
+      $.function_id,
+      optional($.type_parameters),
+      $.type_parameter_list, // For function signatures, use types
+      ':',
+      $._type,
+      // repeat($.hint),
+    ),
+
+    function_definition: $ => seq(
+      'def',
+      $.function_id,
+      optional($.type_parameters),
+      optional($.pattern_parameter_list), // For function definitions, use patterns
+      '=',
+      $._expression,
+      // repeat(seq('--', $._premise))
+    ),
+
     type_parameters: $ => seq(
       '<',
       $.identifier,
@@ -111,14 +111,43 @@ module.exports = grammar({
       '>'
     ),
   //
-  //   parameter_list: $ => seq(
-  //     '(',
-  //     optional(seq(
-  //       $.type,
-  //       repeat(seq(',', $.type))
-  //     )),
-  //     ')'
-  //   ),
+    type_parameter_list: $ => seq(
+      '(',
+      optional(seq(
+        $._type,
+        repeat(seq(',', $._type))
+      )),
+      ')'
+    ),
+
+    pattern_parameter_list: $ => seq(
+      '(',
+      optional(seq(
+        $.pattern_parameter,
+        repeat(seq(',', $.pattern_parameter))
+      )),
+      ')'
+    ),
+
+    pattern_parameter: $ => choice(
+      $.regular_id, // Simple parameter like i, n, bs
+      $.constructor_pattern, // Constructor pattern like IntV i, FIntV n bs
+    ),
+
+    constructor_pattern: $ => seq(
+      $.constructor_id, 
+      repeat1($.regular_id)
+    ), // IntV i, FIntV n bs
+
+    argument_list: $ => seq(
+      '(',
+      optional(seq(
+        $._expression,
+        repeat(seq(',', $._expression))
+      )),
+      ')',
+    ),
+    
   //
   //   type_parameter: $ => $.identifier,
   //
@@ -139,15 +168,37 @@ module.exports = grammar({
   //     ')'
   //   ),
   //
-  //   _expression: $ => choice(
-  //     $.identifier,
-  //     $.number,
-  //     $.string,
-  //     $.binary_expression,
-  //     $.parenthesized_expression,
-  //     '""',
-  //     'eps',
-  //   ),
+
+    _expression: $ => choice(
+      $.regular_id,
+      $.constructor_expression,
+      $.call_expression,
+      // $.number,
+      // $.string,
+      // $.binary_expression,
+      // $.parenthesized_expression,
+      // '""',
+      'eps',
+    ),
+
+    constructor_expression: $ => prec.right(seq(
+      $.constructor_id,
+      repeat1($._simple_expression), // Constructor arguments like IntV i
+    )),
+
+    _simple_expression: $ => choice(
+      $.regular_id,
+      $.constructor_id,
+      // $.number,
+    ),
+
+    call_expression: $ => seq(
+      $.function_id,
+      // optional($.type_arguments),
+      $.argument_list,
+    ),
+
+
   //
   //   binary_expression: $ => choice(
   //     prec.left(1, seq($._expression, '::', $._expression)),
@@ -161,10 +212,17 @@ module.exports = grammar({
   //     ')'
   //   ),
   //
+    // Identifier patterns for different contexts
+    constructor_id: $ => /[A-Z][a-zA-Z0-9]*/, // CamelCase constructors like IntV, FIntV
+    constant_id: $ => /[A-Z][A-Z0-9_]*/, // ALL_CAPS constants like PLUS, MINUS  
+    regular_id: $ => /[a-z][a-z0-9_]*/, // lowercase identifiers with snake_case like get_int, bitstr
+    function_id: $ => seq('$', $.regular_id), // Function identifiers like $get_int
+    
     identifier: $ => choice(
-      /[a-zA-Z][a-zA-Z0-9_]*/, // regular identifiers
-      // /\$[a-zA-Z_][a-zA-Z0-9_]*/, // function identifiers with $
-      // /[A-Z]+/, // constants like PLUS, MINUS
+      $.regular_id, 
+      $.constructor_id,
+      $.constant_id,
+      $.function_id,
     ),
   //
   //   number: $ => /\d+/,
@@ -172,7 +230,7 @@ module.exports = grammar({
   //   string: $ => /"[^"]*"/,
   //
     _type: $ => choice(
-      $.plain_type,
+      $._plain_type,
       // $.generic_type,
       // $.identifier,
       // $.sequence_type, // type*
@@ -185,8 +243,8 @@ module.exports = grammar({
     bool_type: $ => 'bool', // El.BoolT
     text_type: $ => 'text', // El.TextT
 
-    iterator_type: $ => seq($.plain_type, $.iterator),
-    plain_type: $ => choice(
+    iterator_type: $ => seq($._plain_type, $.iterator),
+    _plain_type: $ => choice(
       $.bool_type,
       $.text_type,
       $.identifier,
@@ -195,7 +253,7 @@ module.exports = grammar({
     ),
 
     tuple_type: $ => seq(
-      '(', repeat(seq($.plain_type, ',')), $.plain_type, ')'
+      '(', repeat(seq($._plain_type, ',')), $._plain_type, ')'
     ),
 
   //   type_arguments: $ => seq(
