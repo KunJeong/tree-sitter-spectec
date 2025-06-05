@@ -19,15 +19,18 @@ module.exports = grammar({
     source_file: $ => repeat($._definition),
 
     _definition: $ => choice(
-      $.syntax_definition, // `syntax` list(id `<` list(tparam, `,`) `>`, `,`)
+      $.comment,
       $.syntax_name, // `syntax` id
-      $._line_comment,
+      $.syntax_definition, // `syntax` list(id `<` list(tparam, `,`) `>`, `,`)
       $.variable_definition, // `var` id `:` plaintyp hint*
       $.relation_definition, //`relation` id `:` nottyp hint*
-      // $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
+      $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
       $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
       $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
     ),
+
+    // Definitions 
+    comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
 
     syntax_name: $ => seq(
       'syntax',
@@ -35,7 +38,7 @@ module.exports = grammar({
       field("type_parameters", optional($.type_parameters)),
     ),
 
-    // Handle syntax definitions: syntax id = body OR syntax id<params> = body  
+    // syntax id = body OR syntax id<tparams> = body  
     syntax_definition: $ => seq(
       'syntax',
       $.identifier,
@@ -45,25 +48,6 @@ module.exports = grammar({
       $.syntax_body
     ),
 
-    syntax_body: $ => choice( // El.deftyp
-      // Named variants: | variant1 | variant2  (with leading |)
-      repeat1(seq('|', $.syntax_variant)),
-      // Named variants: variant1 | variant2 (without leading | for first variant)
-      seq($.syntax_variant, repeat1(seq('|', $.syntax_variant))),
-      // Unnamed variant (singleton): syntax paramtyp = id dir typ (multiple types)
-      prec(2, $.unnamed_variant),
-      // Simple assignment: syntax tid = id (single type)
-      prec(1, $._plain_type),
-    ),
-    
-    unnamed_variant: $ => seq($._type, repeat1($._type)), // At least 2 types like "id dir typ"
-    
-    syntax_variant: $ => choice( // El.typcase
-      prec(1, $.constructor_id), // IntT, FIntT, etc.
-      prec(2, seq($.constructor_id, repeat1($._type))), // IntT, FIntT nat, HeaderT id (member, typ)*
-    ),
-
-    _line_comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
     variable_definition: $ => seq(
       'var',
       $.identifier,
@@ -79,25 +63,54 @@ module.exports = grammar({
       field("body", $.notation_type),
       field("hints", repeat($.hint)),
     ),
+// `rule` id`/`id `:` exp list(`--` prem, nl)
+    rule_definition: $ => seq(
+      'rule',
+      field("relation_name", $.identifier),
+      '/',
+      field("rule_name", $.identifier),
+      ':',
+      field("body", $._expression),
+      field("premises", repeat(seq('--', $._premise, '\n'))),
+    ),
 
     function_signature_definition: $ => seq(
       'dec',
-      $.function_id,
-      optional($.type_parameters),
-      $.pattern_parameter_list,
+      field("name", $.function_id),
+      field("type_parameters", optional($.type_parameters)),
+      field("parameters", optional($.pattern_parameter_list)),
       ':',
-      $._type,
+      field("return_type", $._type),
       // repeat($.hint),
     ),
 
     function_definition: $ => seq(
       'def',
-      $.function_id,
-      optional($.type_parameters),
-      optional($.pattern_parameter_list),
+      field("name", $.function_id),
+      field("type_parameters", optional($.type_parameters)),
+      field("parameters", optional($.pattern_parameter_list)),
       '=',
-      $._expression,
-      repeat(seq('--', $._premise))
+      field("return", $._expression),
+      field("premises", repeat(seq('--', $._premise, '\n')))
+    ),
+
+
+    syntax_body: $ => choice( // El.deftyp
+      // Named variants: | variant1 | variant2  (with leading |)
+      repeat1(seq('|', $.syntax_variant)),
+      // Named variants: variant1 | variant2 (without leading |)
+      seq($.syntax_variant, repeat1(seq('|', $.syntax_variant))),
+      // Unnamed variant (singleton): syntax paramtyp = id dir typ (multiple types)
+      prec(2, $.unnamed_variant),
+      // Simple assignment: syntax tid = id (single type)
+      prec(1, $._plain_type),
+    ),
+    
+    unnamed_variant: $ => seq($._type, repeat1($._type)), // At least 2 types like "id dir typ"
+    
+    syntax_variant: $ => choice( // El.typcase
+      prec(1, $.constructor_id), // IntT, FIntT, etc.
+      prec(2, seq($.constructor_id, repeat1($._type))), // IntT, FIntT nat, HeaderT id (member, typ)*
     ),
 
     type_parameters: $ => seq(
@@ -143,13 +156,15 @@ module.exports = grammar({
     
     _premise: $ => choice(
       $.if_premise, // `if` exp
-      'otherwise',
+      $.else_premise, // `otherwise`
     ),
 
     if_premise: $ => seq(
       'if',
       $._expression,
     ),
+
+    else_premise: $ => 'otherwise',
 
     // Based on parser.mly: HINT_LPAREN hintid exp RPAREN
     hint: $ => seq(

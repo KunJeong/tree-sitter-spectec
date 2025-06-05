@@ -1,5 +1,11 @@
 {
   "dependencies": {
     "tree-sitter-cli": "^0.25.5"
-  }
+  },
+  "tree-sitter": [
+    {
+      "file-types": ["watsup", "spectec"],
+      "highlights": ["queries/highlights.scm"],
+    }
+  ]
 }
