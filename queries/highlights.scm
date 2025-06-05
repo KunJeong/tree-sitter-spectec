@@ -1,6 +1,6 @@
 ; highlights.scm
 
-[ "syntax" "var" "relation" "rule" "dec" "def" ] @keyword
+[ "syntax" "var" "relation" "rule" "dec" "def" "grammar" ] @keyword
 
 (comment) @comment
 ; (_type) @type
