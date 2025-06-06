@@ -23,7 +23,7 @@ module.exports = grammar({
       $.syntax_name, // `syntax` id
       $.syntax_definition, // `syntax` list(id `<` list(tparam, `,`) `>`, `,`)
       $.variable_definition, // `var` id `:` plaintyp hint*
-      $.relation_definition, //`relation` id `:` nottyp hint*
+      $.relation_definition, //`relation` id `:` notation_type hint*
       $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
       $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
       $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
@@ -50,28 +50,30 @@ module.exports = grammar({
 
     variable_definition: $ => seq(
       'var',
-      $.identifier,
+      field("name", $.identifier),
       ':',
-      $._plain_type,
+      field("type", $.plain_type),
       // repeat($.hint)
     ),
 
     relation_definition: $ => seq(
       'relation',
-      field("name", $.identifier),
+      field("name", $.constructor_id),
       ':',
       field("body", $.notation_type),
       field("hints", repeat($.hint)),
     ),
-// `rule` id`/`id `:` exp list(`--` prem, nl)
+
+    // `rule` id`/`id `:` exp list(`--` prem, nl)
     rule_definition: $ => seq(
       'rule',
-      field("relation_name", $.identifier),
+      field("relation_name", $.constructor_id),
       '/',
-      field("rule_name", $.identifier),
+      field("rule_name", $.regular_id),
       ':',
       field("body", $._expression),
       field("premises", repeat(seq('--', $._premise, '\n'))),
+      '\n'
     ),
 
     function_signature_definition: $ => seq(
@@ -80,8 +82,8 @@ module.exports = grammar({
       field("type_parameters", optional($.type_parameters)),
       field("parameters", optional($.pattern_parameter_list)),
       ':',
-      field("return_type", $._type),
-      // repeat($.hint),
+      field("return_type", $.type),
+      field("hints", repeat($.hint)),
     ),
 
     function_definition: $ => seq(
@@ -103,14 +105,14 @@ module.exports = grammar({
       // Unnamed variant (singleton): syntax paramtyp = id dir typ (multiple types)
       prec(2, $.unnamed_variant),
       // Simple assignment: syntax tid = id (single type)
-      prec(1, $._plain_type),
+      prec(1, $.plain_type),
     ),
     
-    unnamed_variant: $ => seq($._type, repeat1($._type)), // At least 2 types like "id dir typ"
+    unnamed_variant: $ => seq($.type, repeat1($.type)), // At least 2 types like "id dir typ"
     
     syntax_variant: $ => choice( // El.typcase
       prec(1, $.constructor_id), // IntT, FIntT, etc.
-      prec(2, seq($.constructor_id, repeat1($._type))), // IntT, FIntT nat, HeaderT id (member, typ)*
+      prec(2, seq($.constructor_id, repeat1($.type))), // IntT, FIntT nat, HeaderT id (member, typ)*
     ),
 
     type_parameters: $ => seq(
@@ -123,23 +125,23 @@ module.exports = grammar({
     pattern_parameter_list: $ => seq( // Parameters with pattern matching
       '(',
       optional(seq(
-        $.pattern_parameter,
-        repeat(seq(',', $.pattern_parameter))
+        $.pattern,
+        repeat(seq(',', $.pattern))
       )),
       ')'
     ),
 
-    pattern_parameter: $ => choice(
+    pattern: $ => choice(
       prec(2, $.singleton_constructor_pattern), // Singleton pattern like IntT (higher precedence)
       prec(1, $.constructor_pattern), // Constructor pattern like IntV i, FIntV n bs
       $.regular_id, // Simple parameter like i, n, bs (lowest precedence)
     ),
 
     constructor_pattern: $ => seq(
-      $.constructor_id, 
-      repeat1(choice(
+      field("name", $.constructor_id), 
+      field("body", repeat1(choice(
         $.dont_care_id,
-        $.regular_id))
+        $.regular_id)))
     ), // IntV i, FIntV n bs
 
     // Singleton constructor pattern - just the constructor name
@@ -154,9 +156,13 @@ module.exports = grammar({
       ')',
     ),
     
+    //
+    // Premises
+    //
     _premise: $ => choice(
       $.if_premise, // `if` exp
       $.else_premise, // `otherwise`
+      $.rule_premise, // id `:` exp
     ),
 
     if_premise: $ => seq(
@@ -166,30 +172,49 @@ module.exports = grammar({
 
     else_premise: $ => 'otherwise',
 
+    rule_premise: $ => seq(
+      field("rule", $.constructor_id),
+      ":",
+      field("body", $._expression)
+    ),
+
+
     // Based on parser.mly: HINT_LPAREN hintid exp RPAREN
     hint: $ => seq(
-      'hint(',
-      $.identifier, // hintid  
-      $._hint_expression, // Allow more flexible expressions in hints
+      'hint',
+      '(',
+      field("name", $.hint_identifier), // hintid  
+      field("body", $.hint_expression), // Allow more flexible expressions in hints
       ')'
     ),
 
     // Expression specifically for hints - can be a sequence
-    _hint_expression: $ => choice(
+    hint_expression: $ => choice(
       $._expression,
-      $.expression_sequence,
+      $.hole_sequence,
     ),
 
-    expression_sequence: $ => seq(
+    hole_expression: $ => choice( // El.HoleE
+      "%", // Next
+      /[%][0-9]+/, // Num
+      "%%", // Rest
+      "!%", // None
+    ),
+
+    hole_sequence: $ => seq(
       $._expression,
       repeat1($._expression), // Multiple expressions like "%0 %1"
     ),
 
+    boolean_literal: $ => choice("true", "false"),
+
     _expression: $ => choice(
       $.regular_id,
+      $.boolean_literal,
       $.constructor_expression,
       $.call_expression,
-      $.percent_token, // Add support for %0, %1, etc. in hints
+      $.notation_expression,
+      $.hole_expression,
       // $.number,
       // $.string,
       // $.binary_expression,
@@ -198,6 +223,11 @@ module.exports = grammar({
       'eps',
     ),
 
+   notation_expression: $ => choice(
+      seq('(', $.constructor_expression, ')'),
+      seq($.constructor_expression, $.atom, $.constructor_expression), // e.g., `a -> b`
+      ),
+
     constructor_expression: $ => prec.right(seq(
       $.constructor_id,
       repeat1($._simple_expression), // Constructor arguments like IntV i
@@ -205,7 +235,7 @@ module.exports = grammar({
 
     _simple_expression: $ => choice(
       $.regular_id,
-      $.constructor_id,
+      // $.constructor_id,
       // $.number,
     ),
 
@@ -229,8 +259,9 @@ module.exports = grammar({
 
     dont_care_id: $ => '_', // Special case for don't care identifier
     
-    percent_token: $ => /%[0-9]+/, // Support %0, %1, %2, etc. for hints
+    // percent_token: $ => /%[0-9]+/, // Support %0, %1, %2, etc. for hints
 
+    hint_identifier: $ => $.regular_id,
     identifier: $ => choice(
       $.regular_id, // Check regular_id first (includes camelCase)
       $.constructor_id,
@@ -239,8 +270,8 @@ module.exports = grammar({
       $.dont_care_id, // Special case for don't care identifier
     ),
 
-    _type: $ => choice(
-      $._plain_type,
+    type: $ => choice(
+      $.plain_type,
       // $.notation_type, // Add notation types to the main type choice
       // $.generic_type,
       // $.identifier,
@@ -254,8 +285,8 @@ module.exports = grammar({
     bool_type: $ => 'bool', // El.BoolT
     text_type: $ => 'text', // El.TextT
 
-    iterator_type: $ => seq($._plain_type, $.iterator),
-    _plain_type: $ => choice(
+    iterator_type: $ => seq($.plain_type, $.iterator),
+    plain_type: $ => choice(
       $.bool_type,
       $.text_type,
       $.identifier, // Back to using general identifier
@@ -265,40 +296,40 @@ module.exports = grammar({
 
     // Based on parser.mly notation type hierarchy
     notation_type: $ => choice(
-      $.nottyp_rel,
+      $._notation_type_rel,
     ),
 
     // Implement the precedence hierarchy from parser.mly
-    nottyp_post: $ => choice(
-      $.nottyp_prim,
-      seq($.nottyp_prim, $.iterator),
+    _notation_type_post: $ => choice(
+      $.notation_type_prim,
+      seq($.notation_type_prim, $.iterator),
     ),
 
-    nottyp_prim: $ => choice(
+    notation_type_prim: $ => choice(
       $.identifier,
       $.atom,
       // Add other primitives as needed
     ),
 
-    nottyp_seq: $ => choice(
-      $.nottyp_post,
-      seq($.nottyp_post, $.nottyp_seq), // Right-recursive: builds sequences properly
+    _notation_type_seq: $ => choice(
+      $._notation_type_post,
+      seq($._notation_type_post, $._notation_type_seq), // Right-recursive: builds sequences properly
     ),
 
-    nottyp_un: $ => choice(
-      $.nottyp_seq,
-      // seq($.infixop, $.nottyp_un), // prefix infix
+    _notation_type_un: $ => choice(
+      $._notation_type_seq,
+      // seq($.infixop, $.notation_type_un), // prefix infix
     ),
 
-    nottyp_bin: $ => choice(
-      $.nottyp_un,
-      // seq($.nottyp_bin, $.infixop, $.nottyp_bin), // infix
+    _notation_type_bin: $ => choice(
+      $._notation_type_un,
+      // seq($.notation_type_bin, $.infixop, $.notation_type_bin), // infix
     ),
 
-    nottyp_rel: $ => choice(
-      $.nottyp_bin,
-      // seq($.relop, $.nottyp_rel), // prefix relop
-      // seq($.nottyp_rel, $.relop, $.nottyp_rel), // infix relop
+    _notation_type_rel: $ => choice(
+      $._notation_type_bin,
+      // seq($.relop, $.notation_type_rel), // prefix relop
+      // seq($.notation_type_rel, $.relop, $.notation_type_rel), // infix relop
     ),
 
     atom: $ => choice(
@@ -309,7 +340,7 @@ module.exports = grammar({
     ),
 
     tuple_type: $ => seq(
-      '(', repeat(seq($._plain_type, ',')), $._plain_type, ')'
+      '(', repeat(seq($.plain_type, ',')), $.plain_type, ')'
     ),
 
   }
