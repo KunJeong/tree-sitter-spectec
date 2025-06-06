@@ -1,0 +1,370 @@
+;;
+;; Explicit Casts
+;;
+
+rule Sub_expl:
+  typ_a <: typ_b
+  -- Sub_expl_canon: $canon_typ(typ_a) <: $canon_typ(typ_b)
+
+rule Sub_expl_canon/eq:
+  typ_a <: typ_b
+  -- Type_alpha: typ_a ~~ typ_b
+
+rule Sub_expl_canon/fbitt-boolt:
+  FBitT 1 <: BoolT
+
+rule Sub_expl_canon/boolt-fbitt:
+  BoolT <: FBitT 1
+
+rule Sub_expl_canon/intt-boolt:
+  IntT <: BoolT
+
+rule Sub_expl_canon/fintt-fbitt:
+  FIntT width_a <: FBitT width_b
+
+rule Sub_expl_canon/fbitt-fintt:
+  FBitT width_a <: FIntT width_b
+
+rule Sub_expl_canon/fbitt-fbitt:
+  FBitT width_a <: FBitT width_b
+
+rule Sub_expl_canon/fintt-fintt:
+  FIntT width_a <: FIntT width_b
+
+rule Sub_expl_canon/fbitt-intt:
+  FBitT width <: IntT
+
+rule Sub_expl_canon/fintt-intt:
+  FIntT width <: IntT
+
+rule Sub_expl_canon/intt-fbitt:
+  IntT <: FBitT width
+
+rule Sub_expl_canon/intt-fintt:
+  IntT <: FIntT width
+
+rule Sub_expl_canon/newt-innert:
+  NewT _ typ_a <: typ_b
+  -- Sub_impl: typ_a << typ_b
+
+rule Sub_expl_canon/innert-newt:
+  typ_a <: NewT _ typ_b
+  -- Sub_impl: typ_a << typ_b
+
+rule Sub_expl_canon/senumt-innert:
+  SEnumT _ typ_a _ <: typ_b
+  -- Sub_impl: typ_a << typ_b
+
+rule Sub_expl_canon/innert-senumt:
+  typ_a <: SEnumT _ typ_b _
+  -- Sub_impl: typ_a << typ_b
+
+rule Sub_expl_canon/seqt-list:
+  SeqT typ_a* <: ListT typ_b
+  -- (Sub_expl: typ_a <: typ_b)*
+
+rule Sub_expl_canon/seqt-tuplet:
+  SeqT typ_a* <: TupleT typ_b*
+  -- (Sub_expl: typ_a <: typ_b)*
+
+rule Sub_expl_canon/seqt-stackt:
+  SeqT typ_a* <: StackT typ_b i_size
+  -- if |typ_a*| <= i_size
+  -- (Sub_expl: typ_a <: typ_b)*
+
+rule Sub_expl_canon/seqt-structt:
+  SeqT typ_a* <: StructT _ (_, typ_b)*
+  -- (Sub_expl: typ_a <: typ_b)*
+
+rule Sub_expl_canon/seqt-headert:
+  SeqT typ_a* <: HeaderT _ (_, typ_b)*
+  -- (Sub_expl: typ_a <: typ_b)*
+
+rule Sub_expl_canon/recordt-structt:
+  RecordT (member_a, typ_a)* <: StructT _ (member_b, typ_b)*
+  -- if $eq_set<member>(SET member_a*, SET member_b*)
+  ----
+  -- (Sub_expl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       <: $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+
+rule Sub_expl_canon/recordt-headert:
+  RecordT (member_a, typ_a)* <: HeaderT _ (member_b, typ_b)*
+  -- if $eq_set<member>(SET member_a*, SET member_b*)
+  ----
+  -- (Sub_expl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       <: $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+
+rule Sub_expl_canon/defaultt:
+  DefaultT <: typ
+  -- if $is_deftable(typ)
+
+rule Sub_expl_canon/seqdefaultt-tuplet:
+  SeqDefaultT typ_a* <: TupleT typ_b*
+  -- if |typ_a*| < |typ_b*|
+  -- if (typ_c*, typ_d*) = $partition_<typ>(typ_b*, |typ_a*|)
+  ----
+  -- (Sub_expl: typ_a <: typ_c)*
+  -- if ($is_deftable(typ_d))*
+
+rule Sub_expl_canon/seqdefaultt-stackt:
+  SeqDefaultT typ_a* <: StackT typ_b i_size
+  -- if |typ_a*| < i_size
+  -- (Sub_expl: typ_a <: typ_b)*
+  -- if $is_deftable(typ_b)
+
+rule Sub_expl_canon/seqdefaultt-structt:
+  SeqDefaultT typ_a* <: StructT _ (_, typ_b)*
+  -- if |typ_a*| < |typ_b*|
+  -- if (typ_c*, typ_d*) = $partition_<typ>(typ_b*, |typ_a*|)
+  ----
+  -- (Sub_expl: typ_a <: typ_c)*
+  -- if ($is_deftable(typ_d))*
+
+rule Sub_expl_canon/seqdefaultt-headert:
+  SeqDefaultT typ_a* <: HeaderT _ (_, typ_b)*
+  -- if |typ_a*| < |typ_b*|
+  -- if (typ_c*, typ_d*) = $partition_<typ>(typ_b*, |typ_a*|)
+  ----
+  -- (Sub_expl: typ_a <: typ_c)*
+  -- if ($is_deftable(typ_d))*
+
+rule Sub_expl_canon/recorddefaultt-structt:
+  RecordDefaultT (member_a, typ_a)* <: StructT _ (member_b, typ_b)*
+  -- if $sub_set<member>(SET member_a*, SET member_b*)
+  -- if SET member_c* = $diff_set<member>(SET member_b*, SET member_a*)
+  ----
+  -- (Sub_expl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       <: $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+  ----
+  -- if ($is_deftable($find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_c)))*
+
+rule Sub_expl_canon/recorddefaultt-headert:
+  RecordDefaultT (member_a, typ_a)* <: HeaderT _ (member_b, typ_b)*
+  -- if $sub_set<member>(SET member_a*, SET member_a*)
+  -- if SET member_c* = $diff_set<member>(SET member_b*, SET member_a*)
+  ----
+  -- (Sub_expl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       <: $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+  ----
+  -- if ($is_deftable($find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_c)))*
+
+rule Sub_expl_canon/invalidt-headert:
+  InvalidT <: HeaderT _ _
+
+rule Sub_expl_canon/invalidt-uniont:
+  InvalidT <: UnionT _ _
+
+rule Sub_expl_canon/sett-sett:
+  SetT typ_a <: SetT typ_b
+  -- Sub_expl: typ_a <: typ_b
+
+rule Sub_expl_canon/non-sett-sett:
+  typ_a <: SetT typ_b
+  -- Sub_expl: typ_a <: typ_b
+
+;;
+;; Implicit Casts
+;;
+
+rule Sub_impl:
+  typ_a << typ_b
+  -- Sub_impl_canon: $canon_typ(typ_a) << $canon_typ(typ_b)
+
+rule Sub_impl_canon/eq:
+  typ_a << typ_b
+  -- Type_alpha: typ_a ~~ typ_b
+
+rule Sub_impl_canon/intt-fbitt:
+  IntT << FBitT _
+
+rule Sub_impl_canon/intt-fintt:
+  IntT << FIntT _ 
+
+rule Sub_impl_canon/senumt-innert:
+  SEnumT _ typ_a _ << typ_b
+  -- Sub_impl: typ_a << typ_b
+
+rule Sub_impl_canon/seqt-list:
+  SeqT typ_a* << ListT typ_b
+  -- (Sub_impl: typ_a << typ_b)*
+
+rule Sub_impl_canon/seqt-tuplet:
+  SeqT typ_a* << TupleT typ_b*
+  -- (Sub_impl: typ_a << typ_b)*
+
+rule Sub_impl_canon/seqt-stackt:
+  SeqT typ_a* << StackT typ_b i_size
+  -- if |typ_a*| <= i_size
+  -- (Sub_impl: typ_a << typ_b)*
+
+rule Sub_impl_canon/seqt-structt:
+  SeqT typ_a* << StructT _ (_, typ_b)*
+  -- (Sub_impl: typ_a << typ_b)*
+
+rule Sub_impl_canon/seqt-headert:
+  SeqT typ_a* << HeaderT _ (_, typ_b)*
+  -- (Sub_impl: typ_a << typ_b)*
+
+rule Sub_impl_canon/seqt-seqt:
+  SeqT typ_a* << SeqT typ_b*
+  -- (Sub_impl: typ_a << typ_b)*
+
+rule Sub_impl_canon/recordt-structt:
+  RecordT (member_a, typ_a)* << StructT _ (member_b, typ_b)*
+  -- if $eq_set<member>(SET member_a*, SET member_b*)
+  ----
+  -- (Sub_impl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       << $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+
+rule Sub_impl_canon/recordt-headert:
+  RecordT (member_a, typ_a)* << HeaderT _ (member_b, typ_b)*
+  -- if $eq_set<member>(SET member_a*, SET member_b*)
+  ----
+  -- (Sub_impl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       << $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+
+rule Sub_impl_canon/defaultt:
+  DefaultT << typ
+  -- if $is_deftable(typ)
+
+rule Sub_impl_canon/seqdefaultt-tuplet:
+  SeqDefaultT typ_a* << TupleT typ_b*
+  -- if |typ_a*| < |typ_b*|
+  -- if (typ_c*, typ_d*) = $partition_<typ>(typ_b*, |typ_a*|)
+  ----
+  -- (Sub_impl: typ_a << typ_c)*
+  -- if ($is_deftable(typ_d))*
+
+rule Sub_impl_canon/seqdefaultt-stackt:
+  SeqDefaultT typ_a* << StackT typ_b i_size
+  -- if |typ_a*| < i_size
+  -- (Sub_impl: typ_a << typ_b)*
+  -- if $is_deftable(typ_b)
+
+rule Sub_impl_canon/seqdefaultt-structt:
+  SeqDefaultT typ_a* << StructT _ (_, typ_b)*
+  -- if |typ_a*| < |typ_b*|
+  -- if (typ_c*, typ_d*) = $partition_<typ>(typ_b*, |typ_a*|)
+  ----
+  -- (Sub_impl: typ_a << typ_c)*
+  -- if ($is_deftable(typ_d))*
+
+rule Sub_impl_canon/seqdefaultt-headert:
+  SeqDefaultT typ_a* << HeaderT _ (_, typ_b)*
+  -- if |typ_a*| < |typ_b*|
+  -- if (typ_c*, typ_d*) = $partition_<typ>(typ_b*, |typ_a*|)
+  ----
+  -- (Sub_impl: typ_a << typ_c)*
+  -- if ($is_deftable(typ_d))*
+
+rule Sub_impl_canon/recorddefaultt-structt:
+  RecordDefaultT (member_a, typ_a)* << StructT _ (member_b, typ_b)*
+  -- if $sub_set<member>(SET member_a*, SET member_b*)
+  -- if SET member_c* = $diff_set<member>(SET member_b*, SET member_a*)
+  ----
+  -- (Sub_impl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       << $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+  ----
+  -- if ($is_deftable($find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_c)))*
+
+rule Sub_impl_canon/recorddefaultt-headert:
+  RecordDefaultT (member_a, typ_a)* << HeaderT id (member_b, typ_b)*
+  -- if $sub_set<member>(SET member_a*, SET member_b*)
+  -- if SET member_c* = $diff_set<member>(SET member_b*, SET member_a*)
+  ----
+  -- (Sub_impl:
+       $find_map<member, typ>(MAP (PAIR member_a typ_a)*, member_a)
+       << $find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_a))*
+  ----
+  -- if ($is_deftable($find_map<member, typ>(MAP (PAIR member_b typ_b)*, member_c)))*
+
+rule Sub_impl_canon/invalidt-headert:
+  InvalidT << HeaderT _ _
+
+rule Sub_impl_canon/invalidt-uniont:
+  InvalidT << UnionT _ _
+
+;;
+;; Coercions
+;;
+
+dec $reduce_senum_unary(exprIL, def $check_unary(typ) : bool) : exprIL
+    hint(show REDUCE %1 UNDER %2)
+
+def $reduce_senum_unary(exprIL, def $check_unary) = exprIL
+  -- if `(typ; _) = $annot(exprIL)
+  -- if $check_unary(typ)
+
+def $reduce_senum_unary(exprIL, def $check_unary) = exprIL''
+  -- if `(typ; ctk) = $annot(exprIL)
+  -- if ~$check_unary(typ)
+  -- if SEnumT _ typ' _ = typ
+  -- if exprIL' = CastE typ' exprIL `(typ'; ctk)
+  -- if exprIL'' = $reduce_senum_unary(exprIL', def $check_unary)
+
+
+dec $reduce_senums_binary(exprIL, exprIL, def $check_binary(typ, typ) : bool) : (exprIL, exprIL)
+    hint(show REDUCE %1 AND %2 UNDER %3)
+
+def $reduce_senums_binary(exprIL_a, exprIL_b, def $check_binary) = (exprIL_a, exprIL_b)
+  -- if `(typ_a; _) = $annot(exprIL_a)
+  -- if `(typ_b; _) = $annot(exprIL_b)
+  -- if $check_binary(typ_a, typ_b)
+
+def $reduce_senums_binary(exprIL_a, exprIL_b, def $check_binary) = (exprIL_a'', exprIL_b'')
+  -- if `(typ_a; ctk_a) = $annot(exprIL_a)
+  -- if `(typ_b; _) = $annot(exprIL_b)
+  -- if ~$check_binary(typ_a, typ_b)
+  -- if SEnumT _ typ_a' _ = typ_a
+  -- if exprIL_a' = CastE typ_a' exprIL_a `(typ_a'; ctk_a)
+  -- if (exprIL_a'', exprIL_b'') = $reduce_senums_binary(exprIL_a', exprIL_b, def $check_binary)
+
+def $reduce_senums_binary(exprIL_a, exprIL_b, def $check_binary) = (exprIL_a'', exprIL_b'')
+  -- if `(typ_a; _) = $annot(exprIL_a)
+  -- if `(typ_b; ctk_b) = $annot(exprIL_b)
+  -- if ~$check_binary(typ_a, typ_b)
+  -- if SEnumT _ typ_b' _ = typ_b
+  -- if exprIL_b' = CastE typ_b' exprIL_b `(typ_b'; ctk_b)
+  -- if (exprIL_a'', exprIL_b'') = $reduce_senums_binary(exprIL_a, exprIL_b', def $check_binary)
+
+
+;; (TODO) This should better be a relation
+dec $coerce_binary(exprIL, exprIL) : (exprIL, exprIL)
+    hint(show COERCE %1 AND %2)
+
+def $coerce_binary(exprIL_a, exprIL_b) = (exprIL_a, exprIL_b)
+  -- if `(typ_a; _) = $annot(exprIL_a)
+  -- if `(typ_b; _) = $annot(exprIL_b)
+  -- Type_alpha: typ_a ~~ typ_b
+
+def $coerce_binary(exprIL_a, exprIL_b) = (exprIL_a', exprIL_b)
+  -- if `(typ_a; ctk_a) = $annot(exprIL_a)
+  -- if `(typ_b; _) = $annot(exprIL_b)
+  -- Sub_impl: typ_a << typ_b
+  -- if exprIL_a' = CastE typ_b exprIL_a `(typ_b; ctk_a)
+
+def $coerce_binary(exprIL_a, exprIL_b) = (exprIL_a, exprIL_b')
+  -- if `(typ_a; _) = $annot(exprIL_a)
+  -- if `(typ_b; ctk_b) = $annot(exprIL_b)
+  -- Sub_impl: typ_b << typ_a
+  -- if exprIL_b' = CastE typ_a exprIL_b `(typ_a; ctk_b)
+
+
+;; (TODO) This should better be a relation
+dec $coerce_assign(exprIL, typ) : exprIL
+    hint(show COERCE %1 to %2)
+
+def $coerce_assign(exprIL, typ_t) = exprIL
+  -- if `(typ_f; _) = $annot(exprIL)
+  -- Type_alpha: typ_f ~~ typ_t
+
+def $coerce_assign(exprIL, typ_t) = CastE typ_t exprIL `(typ_t; ctk_f)
+  -- if `(typ_f; ctk_f) = $annot(exprIL)
+  -- Sub_impl: typ_f << typ_t
