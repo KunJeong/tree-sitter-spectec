@@ -9,11 +9,10 @@
 "--" @keyword
 (separator) @keyword
 (comment) @comment
-; (_type) @type
-; (int_literal) @number
 (variable_definition (identifier) @variable)
 (pattern (regular_id) @variable.parameter)
 (pattern (constructor_pattern [(dont_care_id) (regular_id)] @variable.parameter))
+(pattern (iterator_pattern) @variable.parameter)
 
 
 ; Functions

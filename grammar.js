@@ -28,7 +28,6 @@ module.exports = grammar({
       $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
       $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
       $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
-      $.separator,
     ),
 
     comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
@@ -39,11 +38,12 @@ module.exports = grammar({
       field("type_parameters", optional($.type_parameters)),
     ),
 
-    // syntax id = body OR syntax id<tparams> = body  
+    // syntax id = body OR syntax id<tparams> = body OR syntax id hint(...) = body
     syntax_definition: $ => seq(
       'syntax',
       $.identifier,
       optional($.type_parameters),
+      optional($.hint),
       '=',
       $.syntax_body
     ),
@@ -69,7 +69,7 @@ module.exports = grammar({
       'rule',
       field("relation_name", $.constructor_id),
       '/',
-      field("rule_name", $.regular_id),
+      field("rule_name", $.rule_id),
       ':',
       field("body", $.notation_expression),
       field("premises", repeat(seq('--', $._premise, '\n'))),
@@ -102,6 +102,8 @@ module.exports = grammar({
       repeat1(seq('|', $.syntax_variant)),
       // Named variants: variant1 | variant2 (without leading |)
       seq($.syntax_variant, repeat1(seq('|', $.syntax_variant))),
+      // Single syntax variant (higher precedence than plain type)
+      prec(3, $.syntax_variant),
       // Unnamed variant (singleton): syntax paramtyp = id dir typ (multiple types)
       prec(2, $.unnamed_variant),
       // Simple assignment: syntax tid = id (single type)
@@ -144,6 +146,9 @@ module.exports = grammar({
       ')'
     ),
 
+    //------------------------
+    // Pattern matching
+    //------------------------
     pattern: $ => choice(
       prec(3, $.bracket_pattern), // Bracket patterns like `{ K'* }
       prec(2, $.singleton_constructor_pattern), // Singleton pattern like IntT (higher precedence)
@@ -173,12 +178,15 @@ module.exports = grammar({
     constructor_pattern: $ => seq(
       field("name", $.constructor_id), 
       field("body", repeat1(choice(
-        $.dont_care_id,
+        $.wildcard_pattern,
         $.regular_id)))
     ), // IntV i, FIntV n bs
 
     // Singleton constructor pattern - just the constructor name
     singleton_constructor_pattern: $ => $.constructor_id, // IntT, FIntT, etc.
+
+    wildcard_pattern: $ => '_', // Special case for don't care identifier
+
 
     argument_list: $ => seq(
       '(',
@@ -230,20 +238,19 @@ module.exports = grammar({
       // Parenthesized expressions
       seq('(', $._premise_expression, ')'),
       
-      // Basic operators for premises
-      $.premise_binary_expression,
-      $.premise_comparison_expression,
+      // Unified premise operations
+      $.premise_expression,
     ),
 
-    premise_binary_expression: $ => prec.left(2, seq(
+    // Unified premise expression with all operators
+    premise_expression: $ => prec.left(seq(
       field("left", $._premise_expression),
-      field("operator", choice('+', '-', '*', '/', '%', '++', '<-')),
-      field("right", $._premise_expression)
-    )),
-
-    premise_comparison_expression: $ => prec.left(1, seq(
-      field("left", $._premise_expression),
-      field("operator", choice('=', '!=', '<', '>', '<=', '>=')),
+      field("operator", choice(
+        // Arithmetic operators
+        '+', '-', '*', '/', '%', '++', '<-',
+        // Comparison operators  
+        '=', '!=', '<', '>', '<=', '>=', '/\\', '\\/'
+      )),
       field("right", $._premise_expression)
     )),
 
@@ -263,6 +270,7 @@ module.exports = grammar({
       $.hint_placeholder,     // % placeholders like %, %1, %2, %%
       $.hint_latex,           // %latex("...") expressions
       $.hint_backtick,        // Backtick expressions like `[
+      $.function_id,          // Function identifiers like $distinct
       '.',                    // Single dot
       '...',                  // Ellipsis  
       '@',                    // At symbol
@@ -442,7 +450,7 @@ module.exports = grammar({
 
     _notation_expression_post: $ => choice(
       $.notation_expression_prim,
-      seq($.notation_expression_prim, $.iterator),
+      prec(2, seq($.notation_expression_prim, $.iterator)),
     ),
 
     notation_expression_prim: $ => choice(
@@ -485,7 +493,7 @@ module.exports = grammar({
 
     relational_expression: $ => prec.left(1, seq(
       field("left", $._notation_expression_rel),
-      field("operator", choice(':', ',', '->', '<-', '++', '=')), // relational operators
+      field("operator", choice(':', ',', '->', '<-', '++', '=', '~~')), // relational operators including alpha-equivalence
       field("right", $._notation_expression_rel)
     )),
 
@@ -515,9 +523,9 @@ module.exports = grammar({
       /[a-z][a-z0-9_']*/, // lowercase snake_case with apostrophes like t', get_int, bitstr
       /[a-z][a-zA-Z0-9']*/, // camelCase starting with lowercase with apostrophes like annotIL, exprIL
     ),
+    rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
     function_id: $ => seq('$', $.regular_id), // Function identifiers like $get_int
 
-    dont_care_id: $ => '_', // Special case for don't care identifier
 
     hint_identifier: $ => $.regular_id,
 
@@ -526,7 +534,6 @@ module.exports = grammar({
       $.constructor_id,
       $.constant_id,
       $.function_id,
-      $.dont_care_id, // Special case for don't care identifier
     ),
 
     type: $ => $.plain_type,
@@ -572,7 +579,7 @@ module.exports = grammar({
     // Implement the precedence hierarchy from parser.mly
     _notation_type_post: $ => choice(
       $.notation_type_prim,
-      seq($.notation_type_prim, $.iterator),
+      prec(2, seq($.notation_type_prim, $.iterator)),
     ),
 
     notation_type_prim: $ => choice(
@@ -603,13 +610,57 @@ module.exports = grammar({
     ),
 
     atom: $ => choice(
-      "|-",
-      "~>", 
-      ":",
-      "->",
-      "++",
-      "<-",
-      /[a-zA-Z_][a-zA-Z0-9_]*/, // General atom pattern
+      // Core symbols from lexer.mll
+      "|-",     // TURNSTILE
+      "-|",     // TILESTURN
+      "|-_",    // TURNSTILESUB  
+      "-|_",    // TILESTURNSUB
+      "~>",     // SQARROW
+      "~>_",    // SQARROWSUB
+      "~>*",    // SQARROWSTAR
+      "~>*_",   // SQARROWSTARSUB
+      "~~",     // APPROX
+      "~~_",    // APPROXSUB
+      "=",      // EQ
+      "=/=",    // NE
+      "<",      // LT
+      ">",      // GT
+      "<=",     // LE
+      ">=",     // GE
+      "<:",     // SUB
+      ":>",     // SUP
+      ":=",     // ASSIGN
+      "==",     // EQUIV
+      "=++",    // EQCAT
+      "=_",     // EQSUB
+      "==_",    // EQUIVSUB
+      "/\\",    // AND
+      "\\/",    // OR
+      "(/\\)",  // BIGAND
+      "(\\/)",  // BIGOR
+      "(+)",    // BIGADD
+      "(*)",    // BIGMUL
+      "(++)",   // BIGCAT
+      "+",      // PLUS
+      "-",      // MINUS
+      "*",      // STAR
+      "/",      // SLASH
+      "\\",     // BACKSLASH
+      "^",      // UP
+      "++",     // CAT
+      "+-",     // PLUSMINUS
+      "-+",     // MINUSPLUS
+      "<-",     // MEM
+      "->",     // ARROW
+      "=>",     // ARROW2
+      "->_",    // ARROWSUB
+      "=>_",    // ARROW2SUB
+      "<=>",    // DARROW2
+      "<<",     // PREC
+      ">>",     // SUCC
+      ":",      // COLON
+      "~",      // NOT
+      "?",      // QUEST
     ),
 
     tuple_type: $ => seq(
