@@ -96,4 +96,13 @@ clean:
 test:
 	$(TS) test
 
-.PHONY: all install uninstall clean test
+# Development targets
+dev-install: generate
+	@echo "🔧 Installing parser for Neovim development..."
+	@./scripts/dev-install.sh
+
+generate:
+	@echo "🔧 Generating parser from grammar.js..."
+	@tree-sitter generate
+
+.PHONY: all install uninstall clean dev-install generate test
