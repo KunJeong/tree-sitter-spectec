@@ -44,19 +44,7 @@
           "named": true
         },
         {
-          "type": "hint_bracket_expression",
-          "named": true
-        },
-        {
-          "type": "hole_expression",
-          "named": true
-        },
-        {
           "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "latex_expression",
           "named": true
         },
         {
@@ -166,19 +154,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -248,19 +224,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -514,19 +478,7 @@
           "named": true
         },
         {
-          "type": "hint_bracket_expression",
-          "named": true
-        },
-        {
-          "type": "hole_expression",
-          "named": true
-        },
-        {
           "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "latex_expression",
           "named": true
         },
         {
@@ -735,19 +687,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -817,19 +757,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -1017,19 +945,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -1163,293 +1079,41 @@
   {
     "type": "hint",
     "named": true,
-    "fields": {
-      "name": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "hint_identifier",
-            "named": true
-          }
-        ]
-      }
-    },
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "arrow_expression",
-          "named": true
-        },
-        {
-          "type": "atom_expression",
-          "named": true
-        },
-        {
-          "type": "boolean_literal",
-          "named": true
-        },
-        {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "hint_bracket_expression",
-          "named": true
-        },
-        {
-          "type": "hint_concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "hole_expression",
-          "named": true
-        },
-        {
-          "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "latex_expression",
-          "named": true
-        },
-        {
-          "type": "list_constructor_expression",
-          "named": true
-        },
-        {
-          "type": "membership_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "regular_id",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "hint_bracket_expression",
-    "named": true,
     "fields": {},
     "children": {
       "multiple": true,
       "required": true,
       "types": [
         {
-          "type": "arithmetic_expression",
+          "type": "hint_backtick",
           "named": true
         },
         {
-          "type": "arrow_expression",
+          "type": "hint_latex",
           "named": true
         },
         {
-          "type": "atom_expression",
+          "type": "hint_name",
           "named": true
         },
         {
-          "type": "boolean_literal",
+          "type": "hint_placeholder",
           "named": true
         },
         {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "hint_bracket_expression",
-          "named": true
-        },
-        {
-          "type": "hole_expression",
-          "named": true
-        },
-        {
-          "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "latex_expression",
-          "named": true
-        },
-        {
-          "type": "list_constructor_expression",
-          "named": true
-        },
-        {
-          "type": "membership_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
+          "type": "hint_text",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "hint_concatenation_expression",
+    "type": "hint_backtick",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "arrow_expression",
-          "named": true
-        },
-        {
-          "type": "atom_expression",
-          "named": true
-        },
-        {
-          "type": "boolean_literal",
-          "named": true
-        },
-        {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "hint_bracket_expression",
-          "named": true
-        },
-        {
-          "type": "hint_concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "hole_expression",
-          "named": true
-        },
-        {
-          "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "latex_expression",
-          "named": true
-        },
-        {
-          "type": "list_constructor_expression",
-          "named": true
-        },
-        {
-          "type": "membership_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "regular_id",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
-          "named": true
-        }
-      ]
-    }
+    "fields": {}
   },
   {
-    "type": "hint_identifier",
+    "type": "hint_latex",
     "named": true,
     "fields": {},
     "children": {
@@ -1457,14 +1121,19 @@
       "required": true,
       "types": [
         {
-          "type": "regular_id",
+          "type": "text_literal",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "hole_expression",
+    "type": "hint_name",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "hint_placeholder",
     "named": true,
     "fields": {}
   },
@@ -1673,21 +1342,6 @@
     }
   },
   {
-    "type": "latex_expression",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "text_literal",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "list_constructor_expression",
     "named": true,
     "fields": {
@@ -1732,19 +1386,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -1814,19 +1456,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -1928,19 +1558,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -2010,19 +1628,7 @@
             "named": true
           },
           {
-            "type": "hint_bracket_expression",
-            "named": true
-          },
-          {
-            "type": "hole_expression",
-            "named": true
-          },
-          {
             "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "latex_expression",
             "named": true
           },
           {
@@ -2269,19 +1875,7 @@
           "named": true
         },
         {
-          "type": "hint_bracket_expression",
-          "named": true
-        },
-        {
-          "type": "hole_expression",
-          "named": true
-        },
-        {
           "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "latex_expression",
           "named": true
         },
         {
@@ -3064,6 +2658,10 @@
           "named": true
         },
         {
+          "type": "hint",
+          "named": true
+        },
+        {
           "type": "type",
           "named": true
         }
@@ -3230,6 +2828,10 @@
     "named": false
   },
   {
+    "type": "%%",
+    "named": false
+  },
+  {
     "type": "%latex",
     "named": false
   },
@@ -3270,6 +2872,14 @@
     "named": false
   },
   {
+    "type": ".",
+    "named": false
+  },
+  {
+    "type": "...",
+    "named": false
+  },
+  {
     "type": "/",
     "named": false
   },
@@ -3307,6 +2917,10 @@
   },
   {
     "type": "?",
+    "named": false
+  },
+  {
+    "type": "@",
     "named": false
   },
   {
@@ -3351,6 +2965,10 @@
     "named": false
   },
   {
+    "type": "desc",
+    "named": false
+  },
+  {
     "type": "dont_care_id",
     "named": true
   },
@@ -3371,7 +2989,19 @@
     "named": false
   },
   {
+    "type": "hint_text",
+    "named": true
+  },
+  {
     "type": "if",
+    "named": false
+  },
+  {
+    "type": "input",
+    "named": false
+  },
+  {
+    "type": "macro",
     "named": false
   },
   {
@@ -3385,6 +3015,10 @@
   {
     "type": "separator",
     "named": true
+  },
+  {
+    "type": "show",
+    "named": false
   },
   {
     "type": "syntax",

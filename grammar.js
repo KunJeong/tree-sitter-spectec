@@ -111,8 +111,12 @@ module.exports = grammar({
     unnamed_variant: $ => seq($.type, repeat1($.type)), // At least 2 types like "id dir typ"
     
     syntax_variant: $ => choice( // El.typcase
-      prec(1, $.constructor_id), // IntT, FIntT, etc.
-      prec(2, seq($.constructor_id, repeat1($.type))), // IntT, FIntT nat, HeaderT id (member, typ)*
+      // Constructor with types and optional hint (higher precedence)
+      prec(3, seq($.constructor_id, repeat1($.type), optional($.hint))), 
+      // Constructor with hint but no types
+      prec(2, seq($.constructor_id, $.hint)), 
+      // Constructor only (lowest precedence)
+      prec(1, $.constructor_id), 
     ),
 
     type_parameters: $ => seq(
@@ -247,24 +251,52 @@ module.exports = grammar({
     hint: $ => seq(
       'hint',
       '(',
-      field("name", $.hint_identifier), // hintid  
-      $._hint_expression, // Allow more flexible expressions in hints
+      $.hint_name,
+      repeat($._hint_element),
       ')'
     ),
 
-    // Expression specifically for hints - can be a sequence
-    _hint_expression: $ => choice(
-      $._expression,
-      $.hint_concatenation_expression,
-      prec(1, $.regular_id), // Allow regular identifiers like 'input' - lower precedence
+    hint_name: $ => choice('input', 'show', 'macro', 'desc'),
+    // Individual hint elements - keep it simple and flexible
+    _hint_element: $ => choice(
+      $.hint_text,            // Like "ERR", "V", "_", "MATCH" 
+      $.hint_placeholder,     // % placeholders like %, %1, %2, %%
+      $.hint_latex,           // %latex("...") expressions
+      $.hint_backtick,        // Backtick expressions like `[
+      '.',                    // Single dot
+      '...',                  // Ellipsis  
+      '@',                    // At symbol
+      ']',                    // Bracket end
+      '?',                    // Question mark
+      '(',                    // Parentheses
+      ')',                    
+      '#',                    // Concatenation operator
     ),
 
-    // Hint concatenation with # operator
-    hint_concatenation_expression: $ => prec.left(2, seq(
-      $._hint_expression,
-      '#',
-      $._hint_expression
-    )),
+    // Text elements in hints - separate from hint_identifier to avoid conflicts
+    // Exclude reserved words like "hint", "show", "latex"
+    hint_text: $ => token(prec(-1, /[A-Za-z_][A-Za-z0-9_]*/)),
+
+    // Placeholders: %, %1, %2, %%, etc.
+    hint_placeholder: $ => choice(
+      token(seq('%', /\d+/)), // %0, %1, %2, etc.
+      token('%%'),            // %%
+      prec(-1, token('%')),   // % - lower precedence to avoid conflict with %`[
+    ),
+
+    // LaTeX expressions: %latex("...")
+    hint_latex: $ => seq(
+      '%latex',
+      '(',
+      $.text_literal,
+      ')'
+    ),
+
+    // Backtick expressions like `[
+    hint_backtick: $ => choice(
+      prec(1, seq('%', '`[')), // %`[ - higher precedence 
+      '`[',                    // `[
+    ),
 
     //
     // EXPRESSIONS
@@ -299,11 +331,6 @@ module.exports = grammar({
       
       // Notation expressions
       $.atom_expression, // atoms like |-
-      
-      // Hint expressions
-      $.hole_expression, // %N, %, %%
-      $.latex_expression, // %latex("...")
-      $.hint_bracket_expression, // %2`[%1] or %3#`[%4]?
     ),
 
     // Iterator expressions like t'*
@@ -462,24 +489,7 @@ module.exports = grammar({
       field("right", $._notation_expression_rel)
     )),
 
-    // Hint expressions
-    hole_expression: $ => choice(
-      /%\d+/, // %0, %1, %2, etc.
-      /%/, // %
-      /%%/, // %%
-    ),
 
-    // Latex expressions in hints
-    latex_expression: $ => seq('%latex', '(', $.text_literal, ')'),
-
-    // Hint bracket expressions like %2`[%1] or %3#`[%4]?
-    hint_bracket_expression: $ => prec(3, seq(
-      $.hole_expression,
-      '`[',
-      $._expression,
-      ']',
-      optional('?') // Optional ? suffix
-    )),
 
     // Arrow expressions like K -> V
     arrow_expression: $ => prec.left(3, seq(
