@@ -14,7 +14,6 @@ module.exports = grammar({
     /\s/, // whitespace
     $.comment,
   ],
-
   rules: {
     source_file: $ => repeat($._definition),
 
@@ -22,7 +21,6 @@ module.exports = grammar({
     // Top-level definitions
     //
     _definition: $ => choice(
-      $.comment,
       $.syntax_name, // `syntax` id
       $.syntax_definition, // `syntax` list(id `<` list(tparam, `,`) `>`, `,`)
       $.variable_definition, // `var` id `:` plaintyp hint*
@@ -78,7 +76,7 @@ module.exports = grammar({
     ),
 
     function_signature_definition: $ => seq(
-      'dec',
+      'dec', //TODO: support both `dec` and `def` keywords
       field("name", $.function_id),
       field("type_parameters", optional($.type_parameters)),
       field("parameters", optional($.type_parameter_list)),
@@ -198,7 +196,7 @@ module.exports = grammar({
 
     if_premise: $ => seq(
       'if',
-      $.notation_expression, // Use notation_expression for consistency
+      $._premise_expression, // Use premise expression to avoid infinite loops
     ),
 
     else_premise: $ => 'otherwise',
@@ -208,6 +206,42 @@ module.exports = grammar({
       ":",
       field("body", $.notation_expression)
     ),
+
+    // Premise expressions (subset of expressions to avoid infinite loops)
+    _premise_expression: $ => choice(
+      // Basic literals and variables
+      $.boolean_literal,
+      $.number_literal,
+      $.text_literal,
+      $.epsilon_literal,
+      $.variable_expression,
+      
+      // Function calls and arithmetic
+      $.call_expression,
+      $.arithmetic_expression,
+      
+      // Constructor expressions
+      $.constructor_expression,
+      
+      // Parenthesized expressions
+      seq('(', $._premise_expression, ')'),
+      
+      // Basic operators for premises
+      $.premise_binary_expression,
+      $.premise_comparison_expression,
+    ),
+
+    premise_binary_expression: $ => prec.left(2, seq(
+      field("left", $._premise_expression),
+      field("operator", choice('+', '-', '*', '/', '%', '++', '<-')),
+      field("right", $._premise_expression)
+    )),
+
+    premise_comparison_expression: $ => prec.left(1, seq(
+      field("left", $._premise_expression),
+      field("operator", choice('=', '!=', '<', '>', '<=', '>=')),
+      field("right", $._premise_expression)
+    )),
 
     // Based on parser.mly: HINT_LPAREN hintid exp RPAREN
     hint: $ => seq(
@@ -300,13 +334,23 @@ module.exports = grammar({
       $.constructor_id,
       $.number_literal,
       $.parenthesized_expression,
+      $.arithmetic_expression, // Allow arithmetic expressions as constructor arguments
+      $.call_expression, // Allow function calls as constructor arguments
     ),
 
     // Function calls
-    call_expression: $ => seq(
-      $.function_id,
-      optional($.type_parameters), // Support type parameters like <X>
-      $.argument_list,
+    call_expression: $ => choice(
+      // Function call with arguments (and optional type parameters) - higher precedence
+      prec(2, seq(
+        $.function_id,
+        optional($.type_parameters), // Support type parameters like <X>
+        $.argument_list,
+      )),
+      // Function call with only type parameters (no arguments) - lower precedence
+      prec(1, seq(
+        $.function_id,
+        $.type_parameters, // Type parameters are required for this variant
+      )),
     ),
 
     arithmetic_expression: $ => seq('$', '(', $._arithmetic_expr, ')'),
