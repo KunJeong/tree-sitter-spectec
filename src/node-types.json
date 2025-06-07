@@ -8,67 +8,7 @@
       "required": false,
       "types": [
         {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "arrow_expression",
-          "named": true
-        },
-        {
-          "type": "atom_expression",
-          "named": true
-        },
-        {
-          "type": "boolean_literal",
-          "named": true
-        },
-        {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "list_constructor_expression",
-          "named": true
-        },
-        {
-          "type": "membership_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
+          "type": "function_expression",
           "named": true
         }
       ]
@@ -99,10 +39,6 @@
           "named": true
         },
         {
-          "type": "parenthesized_arithmetic_expression",
-          "named": true
-        },
-        {
           "type": "variable_expression",
           "named": true
         }
@@ -118,67 +54,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -188,67 +64,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -284,22 +100,40 @@
   {
     "type": "atom",
     "named": true,
-    "fields": {}
-  },
-  {
-    "type": "atom_expression",
-    "named": true,
     "fields": {},
     "children": {
       "multiple": false,
       "required": true,
       "types": [
         {
-          "type": "atom",
+          "type": "atom_escape",
+          "named": true
+        },
+        {
+          "type": "atom_infix",
+          "named": true
+        },
+        {
+          "type": "atom_relational",
           "named": true
         }
       ]
     }
+  },
+  {
+    "type": "atom_escape",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "atom_infix",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "atom_relational",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "base_type",
@@ -341,9 +175,17 @@
     "named": true,
     "fields": {
       "left": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "binary_expression",
             "named": true
@@ -358,10 +200,6 @@
           },
           {
             "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_arithmetic_expression",
             "named": true
           },
           {
@@ -397,9 +235,17 @@
         ]
       },
       "right": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "binary_expression",
             "named": true
@@ -414,10 +260,6 @@
           },
           {
             "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_arithmetic_expression",
             "named": true
           },
           {
@@ -442,67 +284,7 @@
       "required": false,
       "types": [
         {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "arrow_expression",
-          "named": true
-        },
-        {
-          "type": "atom_expression",
-          "named": true
-        },
-        {
-          "type": "boolean_literal",
-          "named": true
-        },
-        {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "list_constructor_expression",
-          "named": true
-        },
-        {
-          "type": "membership_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
+          "type": "function_expression",
           "named": true
         }
       ]
@@ -551,9 +333,17 @@
     "named": true,
     "fields": {
       "left": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "binary_expression",
             "named": true
@@ -568,10 +358,6 @@
           },
           {
             "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_arithmetic_expression",
             "named": true
           },
           {
@@ -611,9 +397,17 @@
         ]
       },
       "right": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "binary_expression",
             "named": true
@@ -628,10 +422,6 @@
           },
           {
             "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_arithmetic_expression",
             "named": true
           },
           {
@@ -651,67 +441,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -721,71 +451,26 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
       }
+    }
+  },
+  {
+    "type": "constant_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "constant_id",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -797,27 +482,11 @@
       "required": true,
       "types": [
         {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
           "type": "constructor_id",
           "named": true
         },
         {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "regular_id",
+          "type": "function_expression",
           "named": true
         }
       ]
@@ -832,16 +501,12 @@
     "type": "constructor_pattern",
     "named": true,
     "fields": {
-      "body": {
+      "arguments": {
         "multiple": true,
         "required": true,
         "types": [
           {
-            "type": "regular_id",
-            "named": true
-          },
-          {
-            "type": "wildcard_pattern",
+            "type": "pattern_argument",
             "named": true
           }
         ]
@@ -851,7 +516,7 @@
         "required": true,
         "types": [
           {
-            "type": "constructor_id",
+            "type": "camelcase_constructor_id",
             "named": true
           }
         ]
@@ -891,15 +556,7 @@
             "named": false
           },
           {
-            "type": "else_premise",
-            "named": true
-          },
-          {
-            "type": "if_premise",
-            "named": true
-          },
-          {
-            "type": "rule_premise",
+            "type": "premise_expression",
             "named": true
           }
         ]
@@ -909,67 +566,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -984,6 +581,77 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "function_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "arithmetic_expression",
+          "named": true
+        },
+        {
+          "type": "arrow_expression",
+          "named": true
+        },
+        {
+          "type": "boolean_literal",
+          "named": true
+        },
+        {
+          "type": "bracket_expression",
+          "named": true
+        },
+        {
+          "type": "call_expression",
+          "named": true
+        },
+        {
+          "type": "concatenation_expression",
+          "named": true
+        },
+        {
+          "type": "constructor_expression",
+          "named": true
+        },
+        {
+          "type": "epsilon_literal",
+          "named": true
+        },
+        {
+          "type": "iterator_expression",
+          "named": true
+        },
+        {
+          "type": "list_constructor_expression",
+          "named": true
+        },
+        {
+          "type": "membership_expression",
+          "named": true
+        },
+        {
+          "type": "number_literal",
+          "named": true
+        },
+        {
+          "type": "parenthesized_function_expression",
+          "named": true
+        },
+        {
+          "type": "text_literal",
+          "named": true
+        },
+        {
+          "type": "variable_expression",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1085,10 +753,6 @@
       "required": true,
       "types": [
         {
-          "type": "function_id",
-          "named": true
-        },
-        {
           "type": "hint_backtick",
           "named": true
         },
@@ -1171,108 +835,48 @@
   {
     "type": "if_premise",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "boolean_literal",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "premise_expression",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "infix_expression",
-    "named": true,
     "fields": {
-      "left": {
-        "multiple": true,
-        "required": true,
-        "types": [
-          {
-            "type": "infix_expression",
-            "named": true
-          },
-          {
-            "type": "iterator",
-            "named": true
-          },
-          {
-            "type": "notation_expression_prim",
-            "named": true
-          },
-          {
-            "type": "sequence_expression",
-            "named": true
-          }
-        ]
-      },
-      "operator": {
+      "condition": {
         "multiple": false,
         "required": true,
         "types": [
           {
-            "type": "atom",
-            "named": true
-          }
-        ]
-      },
-      "right": {
-        "multiple": true,
-        "required": true,
-        "types": [
-          {
-            "type": "infix_expression",
-            "named": true
-          },
-          {
-            "type": "iterator",
-            "named": true
-          },
-          {
-            "type": "notation_expression_prim",
-            "named": true
-          },
-          {
-            "type": "sequence_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
       }
+    }
+  },
+  {
+    "type": "iterated_notation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "constant_pattern",
+          "named": true
+        },
+        {
+          "type": "iterator",
+          "named": true
+        },
+        {
+          "type": "notation_constructor",
+          "named": true
+        },
+        {
+          "type": "parenthesized_notation",
+          "named": true
+        },
+        {
+          "type": "regular_id",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -1289,11 +893,11 @@
       "required": true,
       "types": [
         {
-          "type": "iterator",
+          "type": "function_expression",
           "named": true
         },
         {
-          "type": "variable_expression",
+          "type": "iterator",
           "named": true
         }
       ]
@@ -1346,67 +950,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -1416,67 +960,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -1518,67 +1002,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -1588,67 +1012,7 @@
         "required": true,
         "types": [
           {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "arrow_expression",
-            "named": true
-          },
-          {
-            "type": "atom_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "bracket_expression",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "concatenation_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "iterator_expression",
-            "named": true
-          },
-          {
-            "type": "list_constructor_expression",
-            "named": true
-          },
-          {
-            "type": "membership_expression",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "parenthesized_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
+            "type": "function_expression",
             "named": true
           }
         ]
@@ -1656,38 +1020,7 @@
     }
   },
   {
-    "type": "notation_expression",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "infix_expression",
-          "named": true
-        },
-        {
-          "type": "iterator",
-          "named": true
-        },
-        {
-          "type": "notation_expression_prim",
-          "named": true
-        },
-        {
-          "type": "relational_expression",
-          "named": true
-        },
-        {
-          "type": "sequence_expression",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "notation_expression_prim",
+    "type": "notation_argument",
     "named": true,
     "fields": {},
     "children": {
@@ -1695,19 +1028,11 @@
       "required": true,
       "types": [
         {
-          "type": "atom_expression",
+          "type": "camelcase_constructor_id",
           "named": true
         },
         {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
+          "type": "constant_pattern",
           "named": true
         },
         {
@@ -1719,7 +1044,11 @@
           "named": true
         },
         {
-          "type": "parenthesized_expression",
+          "type": "parenthesized_notation",
+          "named": true
+        },
+        {
+          "type": "regular_id",
           "named": true
         },
         {
@@ -1727,7 +1056,230 @@
           "named": true
         },
         {
-          "type": "variable_expression",
+          "type": "wildcard_pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "notation_atom",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "atom",
+          "named": true
+        },
+        {
+          "type": "bracket_expression",
+          "named": true
+        },
+        {
+          "type": "call_expression",
+          "named": true
+        },
+        {
+          "type": "constant_pattern",
+          "named": true
+        },
+        {
+          "type": "epsilon_literal",
+          "named": true
+        },
+        {
+          "type": "iterated_notation",
+          "named": true
+        },
+        {
+          "type": "notation_constructor",
+          "named": true
+        },
+        {
+          "type": "number_literal",
+          "named": true
+        },
+        {
+          "type": "parenthesized_notation",
+          "named": true
+        },
+        {
+          "type": "regular_id",
+          "named": true
+        },
+        {
+          "type": "text_literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "notation_bin",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "notation_atom",
+            "named": true
+          },
+          {
+            "type": "notation_seq",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "atom_infix",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "notation_atom",
+            "named": true
+          },
+          {
+            "type": "notation_seq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "notation_constructor",
+    "named": true,
+    "fields": {
+      "arguments": {
+        "multiple": true,
+        "required": true,
+        "types": [
+          {
+            "type": "notation_argument",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "camelcase_constructor_id",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "notation_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "notation_atom",
+          "named": true
+        },
+        {
+          "type": "notation_bin",
+          "named": true
+        },
+        {
+          "type": "notation_rel",
+          "named": true
+        },
+        {
+          "type": "notation_seq",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "notation_rel",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "notation_atom",
+            "named": true
+          },
+          {
+            "type": "notation_bin",
+            "named": true
+          },
+          {
+            "type": "notation_rel",
+            "named": true
+          },
+          {
+            "type": "notation_seq",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "atom_relational",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "notation_atom",
+            "named": true
+          },
+          {
+            "type": "notation_bin",
+            "named": true
+          },
+          {
+            "type": "notation_seq",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "notation_seq",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "notation_atom",
           "named": true
         }
       ]
@@ -1792,7 +1344,7 @@
     }
   },
   {
-    "type": "parenthesized_arithmetic_expression",
+    "type": "parenthesized_function_expression",
     "named": true,
     "fields": {},
     "children": {
@@ -1800,34 +1352,14 @@
       "required": true,
       "types": [
         {
-          "type": "binary_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "comparison_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
+          "type": "function_expression",
           "named": true
         }
       ]
     }
   },
   {
-    "type": "parenthesized_expression",
+    "type": "parenthesized_notation",
     "named": true,
     "fields": {},
     "children": {
@@ -1835,67 +1367,7 @@
       "required": true,
       "types": [
         {
-          "type": "arithmetic_expression",
-          "named": true
-        },
-        {
-          "type": "arrow_expression",
-          "named": true
-        },
-        {
-          "type": "atom_expression",
-          "named": true
-        },
-        {
-          "type": "boolean_literal",
-          "named": true
-        },
-        {
-          "type": "bracket_expression",
-          "named": true
-        },
-        {
-          "type": "call_expression",
-          "named": true
-        },
-        {
-          "type": "concatenation_expression",
-          "named": true
-        },
-        {
-          "type": "constructor_expression",
-          "named": true
-        },
-        {
-          "type": "epsilon_literal",
-          "named": true
-        },
-        {
-          "type": "iterator_expression",
-          "named": true
-        },
-        {
-          "type": "list_constructor_expression",
-          "named": true
-        },
-        {
-          "type": "membership_expression",
-          "named": true
-        },
-        {
-          "type": "number_literal",
-          "named": true
-        },
-        {
-          "type": "parenthesized_expression",
-          "named": true
-        },
-        {
-          "type": "text_literal",
-          "named": true
-        },
-        {
-          "type": "variable_expression",
+          "type": "notation_expression",
           "named": true
         }
       ]
@@ -1944,6 +1416,45 @@
         {
           "type": "singleton_constructor_pattern",
           "named": true
+        },
+        {
+          "type": "wildcard_pattern",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "pattern_argument",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "camelcase_constructor_id",
+          "named": true
+        },
+        {
+          "type": "epsilon_literal",
+          "named": true
+        },
+        {
+          "type": "number_literal",
+          "named": true
+        },
+        {
+          "type": "pattern",
+          "named": true
+        },
+        {
+          "type": "regular_id",
+          "named": true
+        },
+        {
+          "type": "wildcard_pattern",
+          "named": true
         }
       ]
     }
@@ -1985,173 +1496,28 @@
   {
     "type": "premise_expression",
     "named": true,
-    "fields": {
-      "left": {
-        "multiple": true,
-        "required": true,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "premise_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
-            "named": true
-          }
-        ]
-      },
-      "operator": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "!=",
-            "named": false
-          },
-          {
-            "type": "%",
-            "named": false
-          },
-          {
-            "type": "*",
-            "named": false
-          },
-          {
-            "type": "+",
-            "named": false
-          },
-          {
-            "type": "++",
-            "named": false
-          },
-          {
-            "type": "-",
-            "named": false
-          },
-          {
-            "type": "/",
-            "named": false
-          },
-          {
-            "type": "/\\",
-            "named": false
-          },
-          {
-            "type": "<",
-            "named": false
-          },
-          {
-            "type": "<-",
-            "named": false
-          },
-          {
-            "type": "<=",
-            "named": false
-          },
-          {
-            "type": "=",
-            "named": false
-          },
-          {
-            "type": ">",
-            "named": false
-          },
-          {
-            "type": ">=",
-            "named": false
-          },
-          {
-            "type": "\\/",
-            "named": false
-          }
-        ]
-      },
-      "right": {
-        "multiple": true,
-        "required": true,
-        "types": [
-          {
-            "type": "(",
-            "named": false
-          },
-          {
-            "type": ")",
-            "named": false
-          },
-          {
-            "type": "arithmetic_expression",
-            "named": true
-          },
-          {
-            "type": "boolean_literal",
-            "named": true
-          },
-          {
-            "type": "call_expression",
-            "named": true
-          },
-          {
-            "type": "constructor_expression",
-            "named": true
-          },
-          {
-            "type": "epsilon_literal",
-            "named": true
-          },
-          {
-            "type": "number_literal",
-            "named": true
-          },
-          {
-            "type": "premise_expression",
-            "named": true
-          },
-          {
-            "type": "text_literal",
-            "named": true
-          },
-          {
-            "type": "variable_expression",
-            "named": true
-          }
-        ]
-      }
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "else_premise",
+          "named": true
+        },
+        {
+          "type": "if_premise",
+          "named": true
+        },
+        {
+          "type": "rule_premise",
+          "named": true
+        },
+        {
+          "type": "variable_premise",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -2196,98 +1562,6 @@
     }
   },
   {
-    "type": "relational_expression",
-    "named": true,
-    "fields": {
-      "left": {
-        "multiple": true,
-        "required": true,
-        "types": [
-          {
-            "type": "infix_expression",
-            "named": true
-          },
-          {
-            "type": "iterator",
-            "named": true
-          },
-          {
-            "type": "notation_expression_prim",
-            "named": true
-          },
-          {
-            "type": "relational_expression",
-            "named": true
-          },
-          {
-            "type": "sequence_expression",
-            "named": true
-          }
-        ]
-      },
-      "operator": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "++",
-            "named": false
-          },
-          {
-            "type": ",",
-            "named": false
-          },
-          {
-            "type": "->",
-            "named": false
-          },
-          {
-            "type": ":",
-            "named": false
-          },
-          {
-            "type": "<-",
-            "named": false
-          },
-          {
-            "type": "=",
-            "named": false
-          },
-          {
-            "type": "~~",
-            "named": false
-          }
-        ]
-      },
-      "right": {
-        "multiple": true,
-        "required": true,
-        "types": [
-          {
-            "type": "infix_expression",
-            "named": true
-          },
-          {
-            "type": "iterator",
-            "named": true
-          },
-          {
-            "type": "notation_expression_prim",
-            "named": true
-          },
-          {
-            "type": "relational_expression",
-            "named": true
-          },
-          {
-            "type": "sequence_expression",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "rule_definition",
     "named": true,
     "fields": {
@@ -2314,15 +1588,7 @@
             "named": false
           },
           {
-            "type": "else_premise",
-            "named": true
-          },
-          {
-            "type": "if_premise",
-            "named": true
-          },
-          {
-            "type": "rule_premise",
+            "type": "premise_expression",
             "named": true
           }
         ]
@@ -2363,7 +1629,7 @@
           }
         ]
       },
-      "rule": {
+      "relation": {
         "multiple": false,
         "required": true,
         "types": [
@@ -2376,25 +1642,6 @@
     }
   },
   {
-    "type": "sequence_expression",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "iterator",
-          "named": true
-        },
-        {
-          "type": "notation_expression_prim",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "singleton_constructor_pattern",
     "named": true,
     "fields": {},
@@ -2403,7 +1650,7 @@
       "required": true,
       "types": [
         {
-          "type": "constructor_id",
+          "type": "camelcase_constructor_id",
           "named": true
         }
       ]
@@ -2562,7 +1809,7 @@
       "required": true,
       "types": [
         {
-          "type": "type",
+          "type": "plain_type",
           "named": true
         }
       ]
@@ -2680,6 +1927,32 @@
     }
   },
   {
+    "type": "variable_premise",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "regular_id",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "\n",
     "named": false
   },
@@ -2756,19 +2029,11 @@
     "named": false
   },
   {
-    "type": "+-",
-    "named": false
-  },
-  {
     "type": ",",
     "named": false
   },
   {
     "type": "-",
-    "named": false
-  },
-  {
-    "type": "-+",
     "named": false
   },
   {
@@ -2796,15 +2061,15 @@
     "named": false
   },
   {
+    "type": "..",
+    "named": false
+  },
+  {
     "type": "...",
     "named": false
   },
   {
     "type": "/",
-    "named": false
-  },
-  {
-    "type": "/\\",
     "named": false
   },
   {
@@ -2821,6 +2086,14 @@
   },
   {
     "type": ":>",
+    "named": false
+  },
+  {
+    "type": ":_",
+    "named": false
+  },
+  {
+    "type": ";",
     "named": false
   },
   {
@@ -2844,19 +2117,7 @@
     "named": false
   },
   {
-    "type": "<=>",
-    "named": false
-  },
-  {
     "type": "=",
-    "named": false
-  },
-  {
-    "type": "=++",
-    "named": false
-  },
-  {
-    "type": "=/=",
     "named": false
   },
   {
@@ -2865,10 +2126,6 @@
   },
   {
     "type": "==_",
-    "named": false
-  },
-  {
-    "type": "=>",
     "named": false
   },
   {
@@ -2904,19 +2161,71 @@
     "named": false
   },
   {
-    "type": "\\/",
-    "named": false
-  },
-  {
     "type": "]",
     "named": false
   },
   {
-    "type": "^",
+    "type": "^|^",
+    "named": false
+  },
+  {
+    "type": "_|_",
     "named": false
   },
   {
     "type": "`(",
+    "named": false
+  },
+  {
+    "type": "`*",
+    "named": false
+  },
+  {
+    "type": "`+",
+    "named": false
+  },
+  {
+    "type": "`++",
+    "named": false
+  },
+  {
+    "type": "`,",
+    "named": false
+  },
+  {
+    "type": "`<",
+    "named": false
+  },
+  {
+    "type": "`<-",
+    "named": false
+  },
+  {
+    "type": "`<=",
+    "named": false
+  },
+  {
+    "type": "`=",
+    "named": false
+  },
+  {
+    "type": "`=/=",
+    "named": false
+  },
+  {
+    "type": "`=>",
+    "named": false
+  },
+  {
+    "type": "`>",
+    "named": false
+  },
+  {
+    "type": "`>=",
+    "named": false
+  },
+  {
+    "type": "`?",
     "named": false
   },
   {
@@ -2928,7 +2237,15 @@
     "named": false
   },
   {
+    "type": "`|",
+    "named": false
+  },
+  {
     "type": "bool_type",
+    "named": true
+  },
+  {
+    "type": "camelcase_constructor_id",
     "named": true
   },
   {
@@ -2977,6 +2294,10 @@
     "named": false
   },
   {
+    "type": "infinity",
+    "named": false
+  },
+  {
     "type": "input",
     "named": false
   },
@@ -2995,6 +2316,11 @@
   {
     "type": "rule_id",
     "named": true
+  },
+  {
+    "type": "separator",
+    "named": true,
+    "extra": true
   },
   {
     "type": "show",
@@ -3034,10 +2360,6 @@
   },
   {
     "type": "}",
-    "named": false
-  },
-  {
-    "type": "~",
     "named": false
   },
   {
