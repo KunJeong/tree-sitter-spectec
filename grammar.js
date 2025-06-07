@@ -10,6 +10,13 @@
 module.exports = grammar({
   name: "spectec",
 
+  supertypes: $ => [
+    $.pattern,
+    $.premise,
+    $.notation,
+    $.identifier,
+  ],
+
   extras: $ => [
     /\s/, // whitespace
     $.comment,
@@ -22,27 +29,33 @@ module.exports = grammar({
     // Top-level definitions
     // ------------------------
     _definition: $ => choice(
-      $.syntax_name, // `syntax` id
+      $.syntax_declaration, // `syntax` id
       $.syntax_definition, // `syntax` list(id `<` list(tparam, `,`) `>`, `,`)
       $.variable_definition, // `var` id `:` plaintyp hint*
-      $.relation_definition, //`relation` id `:` notation_type hint*
+      $.relation_declaration, //`relation` id `:` notation_type hint*
       $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
-      $.function_signature_definition, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
+      $.function_declaration, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
       $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
     ),
 
     comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
 
-    syntax_name: $ => seq(
+    syntax_declaration: $ => seq(
       'syntax',
-      field("name", $.identifier),
+      field("name", $.syntax_id),
       field("type_parameters", optional($.type_parameters)),
+      repeat(
+        seq(
+          ",",
+          field("name", $.syntax_id),
+          field("type_parameters", optional($.type_parameters)),
+      ))
     ),
 
     // syntax id = body OR syntax id<tparams> = body OR syntax id hint(...) = body
     syntax_definition: $ => seq(
       'syntax',
-      $.identifier,
+      $.syntax_id,
       optional($.type_parameters),
       optional($.hint),
       '=',
@@ -51,15 +64,15 @@ module.exports = grammar({
 
     variable_definition: $ => seq(
       'var',
-      field("name", $.identifier),
+      field("name", $.syntax_id),
       ':',
       field("type", $.plain_type),
       field("hints", repeat($.hint))
     ),
 
-    relation_definition: $ => seq(
+    relation_declaration: $ => seq(
       'relation',
-      field("name", $.constructor_id),
+      field("name", $.relation_id),
       ':',
       field("body", $.notation_type),
       field("hints", repeat($.hint)),
@@ -68,19 +81,18 @@ module.exports = grammar({
     // Rule definitions use notation expressions
     rule_definition: $ => seq(
       'rule',
-      field("relation_name", $.constructor_id),
-      '/',
-      field("rule_name", $.rule_id),
+      field("relation_name", $.relation_id),
+      optional(seq('/', field("rule_name", $.rule_id))),
       ':',
-      field("body", $.notation_expression),
-      field("premises", repeat(seq('--', $.premise_expression, '\n'))),
+      field("body", $.notation),
+      field("premises", repeat(seq('--', $.premise, '\n'))),
     ),
 
-    function_signature_definition: $ => seq(
+    function_declaration: $ => seq(
       'dec', //TODO: support both `dec` and `def` keywords
       field("name", $.function_id),
       field("type_parameters", optional($.type_parameters)),
-      field("parameters", optional($.type_parameter_list)),
+      field("parameters", optional($.parameter_list)),
       ':',
       field("return_type", $.type),
       field("hints", repeat($.hint)),
@@ -94,7 +106,7 @@ module.exports = grammar({
       field("parameters", optional($.pattern_parameter_list)),
       '=',
       field("return", $.function_expression),
-      field("premises", repeat(seq('--', $.premise_expression)))
+      field("premises", repeat(seq('--', $.premise)))
     ),
 
     separator: $ => '----',
@@ -125,12 +137,12 @@ module.exports = grammar({
 
     type_parameters: $ => seq(
       '<',
-      $.identifier,
-      repeat(seq(',', $.identifier)),
+      $.uppercase_id,
+      repeat(seq(',', $.uppercase_id)),
       '>'
     ),
 
-    type_parameter_list: $ => seq( // Parameters for function signatures (types only)
+    parameter_list: $ => seq(
       '(',
       optional(seq(
         $.plain_type,
@@ -157,11 +169,7 @@ module.exports = grammar({
       prec(1, $.constructor_pattern), // Constructor pattern like IntV i, FIntV n bs
       $.list_constructor_pattern, // Pattern like t :: t'*
       $.arrow_pattern, // Pattern like K -> V
-      $.iterator_pattern, // Pattern like t'*
-      $.number_literal, // Number literals like 0, 1
-      $.regular_id, // Simple parameter like i, n, bs (lowest precedence)
-      $.epsilon_literal, // eps pattern
-      $.wildcard_pattern, // _ pattern
+      $.value_pattern
     ),
 
     // List constructor pattern for function parameters
@@ -180,59 +188,22 @@ module.exports = grammar({
 
     // Constructor patterns in function parameters
     constructor_pattern: $ => prec.right(seq(
-      field("name", $.camelcase_constructor_id),
-      field("arguments", repeat1($.pattern_argument))
+      field("name", $.constructor_id),
+      field("arguments", repeat1($.value_pattern))
     )),
 
+    singleton_constructor_pattern: $ => $.uppercase_id,
 
-
-    // ---------------------------
-    // PREMISES
-    // ----------------------------
-    premise_expression: $ => choice(
-      $.rule_premise,        // relid : notation_expression  
-      $.if_premise,          // if function_expression (boolean condition)
-      $.else_premise,        // otherwise
-      $.variable_premise,    // var id : type
-    ),
-
-    // Rule premises use notation expressions (like relid : C_0 frame |- exp)
-    rule_premise: $ => seq(
-      field("relation", $.constructor_id),
-      ':',
-      field("body", $.notation_expression)
-    ),
-
-    // If premises use function expressions (boolean conditions) 
-    if_premise: $ => seq(
-      'if',
-      field("condition", $.function_expression)
-    ),
-
-    // Else premises are just "otherwise"
-    else_premise: $ => 'otherwise',
-
-    // Variable premises for variable declarations
-    variable_premise: $ => seq(
-      'var',
-      field("name", $.regular_id),
-      ':',
-      field("type", $.type)
-    ),
-
-    singleton_constructor_pattern: $ => $.camelcase_constructor_id,
-
-    pattern_argument: $ => choice(
+    value_pattern: $ => choice(
       $.regular_id,
-      $.wildcard_pattern,
       $.number_literal,
       $.epsilon_literal,
-      $.camelcase_constructor_id,
-      seq('(', $.pattern, ')'), // Parenthesized patterns
+      $.wildcard_pattern,
+      parenthesize($.pattern), // Parenthesized patterns
     ),
 
     // Iterator patterns like t'*
-    iterator_pattern: $ => seq($.regular_id, $.iterator),
+    iterator_pattern: $ => iterate($.regular_id),
 
     // Arrow patterns like K -> V
     arrow_pattern: $ => prec.left(3, seq(
@@ -242,6 +213,36 @@ module.exports = grammar({
     )),
 
     wildcard_pattern: $ => '_',
+
+    // ---------------------------
+    // PREMISES
+    // ----------------------------
+    premise: $ => choice(
+      $.rule_premise,        // relid : notation
+      $.if_premise,          // if function_expression (boolean condition)
+      $.else_premise,        // otherwise
+      $.iterated_premise,
+    ),
+
+    // Rule premises use notation expressions (like relid : C_0 frame |- exp)
+    rule_premise: $ => seq(
+      field("relation_name", $.relation_id),
+      ':',
+      field("body", $.notation)
+    ),
+
+    // If premises use function expressions (boolean conditions) or assignment expressions
+    if_premise: $ => seq(
+      'if',
+      field("condition", choice(
+        $.function_expression,      // Boolean conditions like $some_function()
+        $.assignment_expression,    // Assignments like tidset = $union_set<tid>(...)
+      ))
+    ),
+
+    else_premise: $ => 'otherwise',
+
+    iterated_premise: $ => iterate(parenthesize($.rule_premise)),
 
     // -------------------------
     // FUNCTION EXPRESSIONS (for function bodies)
@@ -256,7 +257,6 @@ module.exports = grammar({
       // Variables and constructors
       $.variable_expression,
       $.constructor_expression,
-      $.iterator_expression,
 
       // Function calls
       $.call_expression,
@@ -271,20 +271,28 @@ module.exports = grammar({
       $.arrow_expression,
 
       // Structure
-      $.parenthesized_function_expression,
       $.bracket_expression,
+      $.tuple_expression,         // (a, b)
+      $.list_expression,          // [exp]
+      iterate($.function_expression),
+      parenthesize($.function_expression),
     ),
 
     variable_expression: $ => $.regular_id,
 
     constructor_expression: $ => prec.right(seq(
-      $.constructor_id,
-      repeat($.function_expression),
+      $.constructor_id,                       // CamelCase constructors like FuncD
+      repeat($.constructor_argument) // Arguments like IntV i, FIntV n bs
     )),
-
-    iterator_expression: $ => prec(2, seq($.function_expression, $.iterator)),
-
-    parenthesized_function_expression: $ => seq('(', $.function_expression, ')'),
+    
+    constructor_argument: $ => choice(
+      $.regular_id,
+      $.wildcard_pattern,
+      $.number_literal,
+      $.epsilon_literal,
+      $.uppercase_id,
+      seq('(', $.function_expression, ')'), // Parenthesized patterns
+    ),
 
     // List constructor (::)
     list_constructor_expression: $ => prec.right(6, seq(
@@ -338,7 +346,7 @@ module.exports = grammar({
 
     arithmetic_expression: $ => seq('$', '(', $._arithmetic_expr, ')'),
 
-    // Arithmetic expressions inside $(...) 
+    // Inner arithmetic expressions
     _arithmetic_expr: $ => choice(
       $.binary_expression,
       $.comparison_expression,
@@ -360,6 +368,42 @@ module.exports = grammar({
       field("right", $._arithmetic_expr)
     )),
 
+    // Assignment expressions for if premises like tidset = $union_set<tid>(...)
+    assignment_expression: $ => prec.left(1, seq(
+      field("left", choice(
+        $.regular_id,                           // Variable like tidset, typ_n
+        $.backtick_tuple_pattern,               // Backtick tuple like `(typ_e; LCTK)
+      )),
+      '=',
+      field("right", $.function_expression)     // Expression like $union_set<tid>(...) 
+    )),
+
+    // Backtick tuple patterns like `(typ_e; LCTK) for type annotations
+    backtick_tuple_pattern: $ => seq(
+      '`(',
+      choice(
+        seq($.regular_id, ';', $.regular_id),   // `(typ_e; LCTK)
+        seq('_', ';', $.regular_id),            // `(_; LCTK)
+      ),
+      ')'
+    ),
+
+    // Tuple expressions (a, b) for notation and conditional expressions
+    tuple_expression: $ => parenthesize(seq(
+      $.function_expression,
+      repeat1(seq(',', $.function_expression))
+    )),
+
+    // List expressions [exp] for conditional expressions
+    list_expression: $ => seq(
+      '[',
+      optional(seq(
+        $.function_expression,
+        repeat(seq(',', $.function_expression))
+      )),
+      ']'
+    ),
+
     // Bracket expressions - Spectec uses `{...}, `[...], `(...)
     bracket_expression: $ => choice(
       seq('`{', optional($.function_expression), '}'),
@@ -370,81 +414,75 @@ module.exports = grammar({
     // -------------------------
     // NOTATION EXPRESSIONS (for rule bodies and rule premises)
     // -------------------------
-    // Notation expressions follow OCaml parser hierarchy
-    notation_expression: $ => choice(
-      $.notation_rel,           // Relational level (lowest precedence)
-      $.notation_bin,           // Binary/infix level  
-      $.notation_seq,           // Sequence level
-      $.notation_atom,          // Atomic level (highest precedence)
+    notation: $ => choice(
+      $.notation_rel,           // Relational operators (outermost)
+      $.notation_bin,           // Infix operators over sequences
+      $.notation_seq,           // Sequence of atoms
+      $.notation_atom,          // Atomic level (innermost)
     ),
 
     // relational atoms like |-, ~>, etc.
     notation_rel: $ => prec.left(1, seq(
-      field("left", choice($.notation_rel, $.notation_bin, $.notation_seq, $.notation_atom)),
+      field("left", choice($.notation_rel, $.notation_bin, $.notation_seq)),
       field("operator", $.atom_relational),
-      field("right", choice($.notation_bin, $.notation_seq, $.notation_atom))
+      field("right", choice($.notation_bin, $.notation_seq))
     )),
 
     // infix atoms like ., .., etc.
     notation_bin: $ => prec.left(2, seq(
-      field("left", choice($.notation_seq, $.notation_atom)),
+      field("left", $.notation_seq),
       field("operator", $.atom_infix),
-      field("right", choice($.notation_seq, $.notation_atom))
+      field("right", $.notation_seq)
     )),
 
     // sequence atoms like p C frame fdenv
     notation_seq: $ => prec.right(3, seq(
       $.notation_atom,
-      repeat1($.notation_atom),
+      repeat($.notation_atom),
     )),
 
     // atomic elements in notation expressions
     notation_atom: $ => choice(
-      $.notation_constructor,     // ConstD id typ val
-      $.constant_pattern,         // GLOBAL, LOCAL, LCTK
+      $.constructor_notation,     // ConstD id typ val
+      $.constant_notation,         // GLOBAL, LOCAL, LCTK
       $.atom,                     // atoms (infixops, relops, escape atoms)
       $.regular_id,               // variables like p, frame, fdenv
       $.number_literal,           // numbers
       $.text_literal,             // strings
       $.epsilon_literal,          // eps
-      $.parenthesized_notation,   // (FuncD ...)
-      $.iterated_notation,        // param*
-      $.call_expression,          // function calls
-      $.bracket_expression,       // `{ ... }
-
+      // $.call_notation,          // function calls
+      // $.bracket_expression,       // `{ ... }
+      parenthesize($.notation),   // (expr) - simple parentheses (higher precedence)
+      $.tuple_notation,           // (a, b) - tuples with commas
+      iterate($.notation_atom),
     ),
 
-    // Constructor patterns in notation expressions
-    notation_constructor: $ => prec.right(seq(
-      field("name", $.camelcase_constructor_id),
-      field("arguments", repeat1($.notation_argument))
+    tuple_notation: $ => parenthesize(seq(
+      $.notation, 
+      repeat1(seq(',', $.notation)))),
+
+    // Constructor patterns in notation expressions  
+    constructor_notation: $ => prec.right(2, seq(
+      field("name", choice(
+        $.constructor_id,    // CamelCase constructors like FuncD, IntV
+        // Use ambiguous_caps_id directly to avoid early resolution
+        prec.dynamic(3, alias($.all_caps_id, "constructor_caps")), // All-caps constructors like CONST, LABEL_, BLOCK
+      )),
+      field("fields", repeat($.value_notation))  // Allow zero or more fields
     )),
 
-    notation_argument: $ => choice(
+    value_notation: $ => choice(
       $.regular_id,               // variables
-      $.constant_pattern,         // ALL_CAPS constants
-      $.wildcard_pattern,         // _ 
       $.number_literal,           // numbers
       $.text_literal,             // strings
       $.epsilon_literal,          // eps
-      $.parenthesized_notation,   // nested patterns
-      $.camelcase_constructor_id, // standalone constructors
+      parenthesize($.notation), // Parenthesized notation
+      $.uppercase_id, // standalone constructors
     ),
 
-    parenthesized_notation: $ => seq('(', $.notation_expression, ')'),
-
-    iterated_notation: $ => prec(3, seq(
-      choice(
-        $.regular_id,
-        $.parenthesized_notation,
-        $.notation_constructor,
-        $.constant_pattern,
-      ),
-      $.iterator
-    )),
 
     // All-caps constants that don't take arguments  
-    constant_pattern: $ => $.constant_id,
+    constant_notation: $ => $.constant_id,
 
     // -------------------------
     // HINTS : only allow a subset of expressions
@@ -519,12 +557,12 @@ module.exports = grammar({
     bool_type: $ => 'bool',
     text_type: $ => 'text',
 
-    iterator_type: $ => seq($.base_type, $.iterator),
+    iterated_type: $ => iterate($.base_type),
 
     base_type: $ => choice(
+      $.syntax_id,
       $.bool_type,
       $.text_type,
-      $.identifier,
       $.tuple_type,
       $.optional_type,
       $.generic_type,
@@ -532,13 +570,13 @@ module.exports = grammar({
 
     plain_type: $ => choice(
       $.base_type,
-      $.iterator_type,
+      $.iterated_type,
     ),
 
-    optional_type: $ => prec(2, seq($.identifier, '?')),
+    optional_type: $ => prec(2, seq($.syntax_id, '?')),
 
     generic_type: $ => seq(
-      $.identifier,
+      $.syntax_id,
       '<',
       $.plain_type,
       repeat(seq(',', $.plain_type)),
@@ -552,18 +590,20 @@ module.exports = grammar({
       ')'
     ),
 
-    // Notation types (for relations) - working well, keep as is
+    // -------------------------
+    // NOTATION TYPES (for relations)
+    // -------------------------
     notation_type: $ => choice(
       $._notation_type_rel,
     ),
 
     _notation_type_post: $ => choice(
       $.notation_type_prim,
-      prec(2, seq($.notation_type_prim, $.iterator)),
+      prec(2, iterate($.notation_type_prim)),
     ),
 
     notation_type_prim: $ => choice(
-      $.identifier,
+      $.syntax_id,
       $.atom,
     ),
 
@@ -636,7 +676,7 @@ module.exports = grammar({
     // Escape atoms - operators prefixed with backtick to use as literals
     atom_escape: $ => choice(
       token(prec(3, "`=")),       // Atom.Equal
-      token(prec(3, "`=/=")),   // Atom.NotEqual
+      token(prec(3, "`=/=")),     // Atom.NotEqual
       token(prec(3, "`<")),       // Atom.Less
       token(prec(3, "`>")),       // Atom.Greater
       token(prec(3, "`<=")),      // Atom.LessEqual
@@ -659,27 +699,49 @@ module.exports = grammar({
     // -------------------------
     // IDENTIFIERS
     // ------------------------- 
-    constructor_id: $ => choice(
-      /[A-Z][a-zA-Z0-9']*/, // CamelCase constructors with apostrophes like IntV, FIntE, K'
-      /[A-Z][a-zA-Z0-9_']*/, // With underscores and apostrophes
-    ),
-    constant_id: $ => /[A-Z][A-Z0-9_]*/, // ALL_CAPS constants like PLUS, MINUS  
-    regular_id: $ => choice(
-      /[a-z][a-z0-9_']*/, // lowercase snake_case with apostrophes like t', get_int, bitstr
-      /[a-z][a-zA-Z0-9']*/, // camelCase starting with lowercase with apostrophes like annotIL, exprIL
-    ),
-    rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
-    function_id: $ => seq('$', $.regular_id), // Function identifiers like $get_int
+    // Unambiguous identifiers
+    uppercase_id: $ => /[A-Z][a-zA-Z0-9_']*/, // Starting with uppercase, hyphens not allowed
+    lowercase_id: $ => /[a-z][a-zA-Z0-9_']*/, // Starting with lowercase, hyphens not allowed
 
-    camelcase_constructor_id: $ => token(prec(2, /[A-Z][a-z][a-zA-Z0-9_']*/)),
+    // Ambiguous all-caps identifiers - can be variables or constants depending on context
+    all_caps_id: $ => /[A-Z][A-Z0-9_]*/, // All-caps like C, GLOBAL, C_0
+
+    rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
+    relation_id: $ => $.uppercase_id,
+    function_id: $ => seq('$', $.lowercase_id), // Function identifiers like $get_int
+    constructor_id: $ => $.uppercase_id,
+    syntax_id: $ => $.lowercase_id,
 
     hint_identifier: $ => $.regular_id,
 
+    // Context-sensitive disambiguation of all-caps identifiers
+    regular_id: $ => choice(
+      $.lowercase_id,
+      // Dynamic precedence: prefer as variable in most contexts
+      prec.dynamic(2, alias($.all_caps_id, "variable_caps")),
+    ),
+
+    constant_id: $ => choice(
+      // Dynamic precedence: lower preference, used when variable doesn't fit
+      prec.dynamic(1, alias($.all_caps_id, "constant_caps")),
+    ),
+
+    // only for supertype querying
     identifier: $ => choice(
-      $.regular_id,
+      $.syntax_id,
       $.constructor_id,
+      $.hint_identifier,
+      $.uppercase_id,
       $.constant_id,
       $.function_id,
     ),
   }
 }); 
+
+function parenthesize(rule) {
+  return seq('(', rule, ')');
+}
+
+function iterate(rule) {
+  return seq(rule, '*');
+}
