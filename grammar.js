@@ -17,6 +17,11 @@ module.exports = grammar({
     $.identifier,
   ],
 
+  conflicts: $ => [
+    [ $.syntax_id, $.regular_id ],
+    [ $.syntax_id, $.constructor_id ],
+  ],
+
   extras: $ => [
     /\s/, // whitespace
     $.comment,
@@ -49,7 +54,8 @@ module.exports = grammar({
           ",",
           field("name", $.syntax_id),
           field("type_parameters", optional($.type_parameters)),
-      ))
+      )),
+      field("hints", repeat($.hint)),
     ),
 
     // syntax id = body OR syntax id<tparams> = body OR syntax id hint(...) = body
@@ -78,7 +84,7 @@ module.exports = grammar({
       field("hints", repeat($.hint)),
     ),
 
-    // Rule definitions use notation expressions
+    // Rule definitions use notations
     rule_definition: $ => seq(
       'rule',
       field("relation_name", $.relation_id),
@@ -89,7 +95,7 @@ module.exports = grammar({
     ),
 
     function_declaration: $ => seq(
-      'dec', //TODO: support both `dec` and `def` keywords
+      choice('dec', 'def'), //TODO: support both `dec` and `def` keywords
       field("name", $.function_id),
       field("type_parameters", optional($.type_parameters)),
       field("parameters", optional($.parameter_list)),
@@ -98,14 +104,14 @@ module.exports = grammar({
       field("hints", repeat($.hint)),
     ),
 
-    // Function definitions use function expressions
+    // Function definitions use expressions
     function_definition: $ => seq(
       'def',
       field("name", $.function_id),
       field("type_parameters", optional($.type_parameters)),
       field("parameters", optional($.pattern_parameter_list)),
       '=',
-      field("return", $.function_expression),
+      field("return", $.expression),
       field("premises", repeat(seq('--', $.premise)))
     ),
 
@@ -137,8 +143,8 @@ module.exports = grammar({
 
     type_parameters: $ => seq(
       '<',
-      $.uppercase_id,
-      repeat(seq(',', $.uppercase_id)),
+      choice($.uppercase_id, $.lowercase_id),
+      repeat(seq(',', choice($.uppercase_id, $.lowercase_id))),
       '>'
     ),
 
@@ -192,7 +198,7 @@ module.exports = grammar({
       field("arguments", repeat1($.value_pattern))
     )),
 
-    singleton_constructor_pattern: $ => $.uppercase_id,
+    singleton_constructor_pattern: $ => $.constructor_id,
 
     value_pattern: $ => choice(
       $.regular_id,
@@ -219,35 +225,36 @@ module.exports = grammar({
     // ----------------------------
     premise: $ => choice(
       $.rule_premise,        // relid : notation
-      $.if_premise,          // if function_expression (boolean condition)
+      $.if_premise,          // if expression (boolean condition)
       $.else_premise,        // otherwise
       $.iterated_premise,
     ),
 
-    // Rule premises use notation expressions (like relid : C_0 frame |- exp)
+    // Rule premises use notation (like relid : C_0 frame |- exp)
     rule_premise: $ => seq(
       field("relation_name", $.relation_id),
       ':',
       field("body", $.notation)
     ),
 
-    // If premises use function expressions (boolean conditions) or assignment expressions
+    // If premises use expressions (boolean conditions) or assignment expressions
     if_premise: $ => seq(
       'if',
-      field("condition", choice(
-        $.function_expression,      // Boolean conditions like $some_function()
-        $.assignment_expression,    // Assignments like tidset = $union_set<tid>(...)
-      ))
+      field("condition", $.expression,)
     ),
 
     else_premise: $ => 'otherwise',
 
-    iterated_premise: $ => iterate(parenthesize($.rule_premise)),
+    // Allow iterating over both rule premises and if premises with ()*
+    iterated_premise: $ => choice(
+      iterate(parenthesize($.rule_premise)),  // (rule_premise)*
+      iterate(parenthesize($.if_premise)),    // (if_premise)*
+    ),
 
     // -------------------------
-    // FUNCTION EXPRESSIONS (for function bodies)
+    // EXPRESSIONS (for function bodies and if conditions)
     // -------------------------
-    function_expression: $ => choice(
+    expression: $ => choice(
       // Literals
       $.boolean_literal,
       $.number_literal,
@@ -257,6 +264,7 @@ module.exports = grammar({
       // Variables and constructors
       $.variable_expression,
       $.constructor_expression,
+      $.optional_expression,      // var? for optional variables
 
       // Function calls
       $.call_expression,
@@ -269,16 +277,20 @@ module.exports = grammar({
       $.concatenation_expression,
       $.membership_expression,
       $.arrow_expression,
+      $.assignment_expression,
 
       // Structure
+      // $.sequence_expression,
       $.bracket_expression,
       $.tuple_expression,         // (a, b)
       $.list_expression,          // [exp]
-      iterate($.function_expression),
-      parenthesize($.function_expression),
+      iterate($.expression),
+      parenthesize($.expression),
     ),
 
     variable_expression: $ => $.regular_id,
+
+    optional_expression: $ => seq($.regular_id, '?'),  // var? for optional variables
 
     constructor_expression: $ => prec.right(seq(
       $.constructor_id,                       // CamelCase constructors like FuncD
@@ -291,33 +303,33 @@ module.exports = grammar({
       $.number_literal,
       $.epsilon_literal,
       $.uppercase_id,
-      seq('(', $.function_expression, ')'), // Parenthesized patterns
+      seq('(', $.expression, ')'), // Parenthesized patterns
     ),
 
     // List constructor (::)
     list_constructor_expression: $ => prec.right(6, seq(
-      field("head", $.function_expression),
+      field("head", $.expression),
       '::',
-      field("tail", $.function_expression)
+      field("tail", $.expression)
     )),
 
     // List operators  
     concatenation_expression: $ => prec.left(5, seq(
-      field("left", $.function_expression),
+      field("left", $.expression),
       '++',
-      field("right", $.function_expression)
+      field("right", $.expression)
     )),
 
     membership_expression: $ => prec.left(4, seq(
-      field("element", $.function_expression),
+      field("element", $.expression),
       '<-',
-      field("collection", $.function_expression)
+      field("collection", $.expression)
     )),
 
     arrow_expression: $ => prec.left(3, seq(
-      field("left", $.function_expression),
+      field("left", $.expression),
       '->',
-      field("right", $.function_expression)
+      field("right", $.expression)
     )),
 
     // Function calls
@@ -338,10 +350,58 @@ module.exports = grammar({
     argument_list: $ => seq(
       '(',
       optional(seq(
-        $.function_expression,
-        repeat(seq(',', $.function_expression))
+        $.argument,
+        repeat(seq(',', $.argument))
       )),
       ')'
+    ),
+
+    argument: $ => choice(
+      $.expression,
+      $.sequence_expression
+    ),
+
+    assignment_expression: $ => prec.left(1, seq(
+      field("left", $.expression),
+      '=',
+      field("right", $.expression)
+    )),
+
+    // Backtick tuple patterns like `(typ_e; LCTK) for annot
+    backtick_tuple_pattern: $ => seq(
+      '`(',
+      choice(
+        seq($.regular_id, ';', $.regular_id),   // `(typ_e; LCTK)
+        seq('_', ';', $.regular_id),            // `(_; LCTK)
+      ),
+      ')'
+    ),
+
+    tuple_expression: $ => parenthesize(seq(
+      $.expression,
+      repeat1(seq(',', $.expression))
+    )),
+
+    sequence_expression: $ => prec.left(1, seq(
+      $.expression,
+      repeat1(seq(' ', $.expression))
+    )),
+
+    // List expressions [exp, exp, ...]
+    list_expression: $ => seq(
+      '[',
+      optional(seq(
+        $.expression,
+        repeat(seq(',', $.expression))
+      )),
+      ']'
+    ),
+
+    // Bracket expressions - Spectec uses `{...}, `[...], `(...)
+    bracket_expression: $ => choice(
+      seq('`{', optional($.expression), '}'),
+      seq('`[', optional($.expression), ']'),
+      seq('`(', optional($.expression), ')'),
     ),
 
     arithmetic_expression: $ => seq('$', '(', $._arithmetic_expr, ')'),
@@ -368,51 +428,8 @@ module.exports = grammar({
       field("right", $._arithmetic_expr)
     )),
 
-    // Assignment expressions for if premises like tidset = $union_set<tid>(...)
-    assignment_expression: $ => prec.left(1, seq(
-      field("left", choice(
-        $.regular_id,                           // Variable like tidset, typ_n
-        $.backtick_tuple_pattern,               // Backtick tuple like `(typ_e; LCTK)
-      )),
-      '=',
-      field("right", $.function_expression)     // Expression like $union_set<tid>(...) 
-    )),
-
-    // Backtick tuple patterns like `(typ_e; LCTK) for type annotations
-    backtick_tuple_pattern: $ => seq(
-      '`(',
-      choice(
-        seq($.regular_id, ';', $.regular_id),   // `(typ_e; LCTK)
-        seq('_', ';', $.regular_id),            // `(_; LCTK)
-      ),
-      ')'
-    ),
-
-    // Tuple expressions (a, b) for notation and conditional expressions
-    tuple_expression: $ => parenthesize(seq(
-      $.function_expression,
-      repeat1(seq(',', $.function_expression))
-    )),
-
-    // List expressions [exp] for conditional expressions
-    list_expression: $ => seq(
-      '[',
-      optional(seq(
-        $.function_expression,
-        repeat(seq(',', $.function_expression))
-      )),
-      ']'
-    ),
-
-    // Bracket expressions - Spectec uses `{...}, `[...], `(...)
-    bracket_expression: $ => choice(
-      seq('`{', optional($.function_expression), '}'),
-      seq('`[', optional($.function_expression), ']'),
-      seq('`(', optional($.function_expression), ')'),
-    ),
-
     // -------------------------
-    // NOTATION EXPRESSIONS (for rule bodies and rule premises)
+    // NOTATIONS (for rule bodies and rule premises)
     // -------------------------
     notation: $ => choice(
       $.notation_rel,           // Relational operators (outermost)
@@ -476,8 +493,11 @@ module.exports = grammar({
       $.number_literal,           // numbers
       $.text_literal,             // strings
       $.epsilon_literal,          // eps
-      parenthesize($.notation), // Parenthesized notation
-      $.uppercase_id, // standalone constructors
+      parenthesize($.notation),   // Parenthesized notation
+      $.uppercase_id,             // standalone constructors
+      $.wildcard_pattern,         // wildcard _
+      seq($.regular_id, '?'),     // optional variable
+      $.call_expression,          // function calls
     ),
 
 
@@ -495,7 +515,7 @@ module.exports = grammar({
       ')'
     ),
 
-    hint_name: $ => choice('input', 'show', 'macro', 'desc'),
+    hint_name: $ => choice('input', 'show', 'macro', 'desc', 'name'),
 
     _hint_element: $ => choice(
       $.hint_text,
@@ -556,6 +576,7 @@ module.exports = grammar({
 
     bool_type: $ => 'bool',
     text_type: $ => 'text',
+    natural_type: $ => 'nat',
 
     iterated_type: $ => iterate($.base_type),
 
@@ -563,6 +584,7 @@ module.exports = grammar({
       $.syntax_id,
       $.bool_type,
       $.text_type,
+      $.natural_type,
       $.tuple_type,
       $.optional_type,
       $.generic_type,
@@ -599,17 +621,20 @@ module.exports = grammar({
 
     _notation_type_post: $ => choice(
       $.notation_type_prim,
-      prec(2, iterate($.notation_type_prim)),
+      prec(3, iterate($.notation_type_prim)),  // Higher precedence for iterators
     ),
 
     notation_type_prim: $ => choice(
       $.syntax_id,
       $.atom,
+      iterate($.notation_type),
+      parenthesize($.notation_type), // Allow parenthesized notation types
+      seq('(', $.notation_type, repeat(seq(',', $.notation_type)), ')'), // Allow tuples
     ),
 
     _notation_type_seq: $ => choice(
       $._notation_type_post,
-      seq($._notation_type_post, $._notation_type_seq),
+      prec.left(1, seq($._notation_type_post, $._notation_type_seq)),  // Lower precedence for sequences
     ),
 
     _notation_type_un: $ => choice(
@@ -708,9 +733,9 @@ module.exports = grammar({
 
     rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
     relation_id: $ => $.uppercase_id,
-    function_id: $ => seq('$', $.lowercase_id), // Function identifiers like $get_int
+    function_id: $ => seq('$', choice($.lowercase_id, $.uppercase_id)), // Function identifiers like $get_int
     constructor_id: $ => $.uppercase_id,
-    syntax_id: $ => $.lowercase_id,
+    syntax_id: $ => choice($.lowercase_id, $.uppercase_id),
 
     hint_identifier: $ => $.regular_id,
 

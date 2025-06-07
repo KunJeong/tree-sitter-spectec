@@ -1,28 +1,42 @@
 ; highlights.scm
 
 [ "syntax" "var" "relation" "rule" "dec" "def" "if" "hint" ] @keyword
+"--" @keyword
 (else_premise) @keyword
 (if_premise "if" @keyword)
 
-[ "(" "`(" "`{" "[" "`[" "<"] @punctuation.bracket.open
-[ ")" "}" "]" ">" ] @punctuation.bracket.close
+[ "(" "`(" "`{" "[" "`["] @punctuation.bracket.open
+[ ")" "}" "]" ] @punctuation.bracket.close
+(type_parameters ["<" ">"] @punctuation.bracket.angle)
 
 [":" "," "." "|" "/"] @punctuation.delimiter
 ["?" "*"] @operator
-(atom) @operator
 
-"--" @keyword
 (separator) @comment
 (comment) @comment
-(variable_definition name: (syntax_id) @variable)
-(pattern (regular_id) @variable.parameter)
-(value_pattern (regular_id) @variable.parameter)
-; Pattern parameters in function definitions
-; (pattern (constructor_pattern [(wildcard_pattern) (regular_id)] @variable.parameter))
-; (pattern (iterator_pattern) @variable.parameter)
-; (notation_atom (notation_constructor (notation_argument) @variable.parameter))
-; (rule_definition body: (notation (notation_atom (regular_id) @variable.parameter)))
+[ "#" ] @comment
 
+; Variables and parameters - non-conflicting approach
+; --------
+
+(variable_definition name: (syntax_id) @variable)
+
+; ONLY function parameters are highlighted as parameters
+(value_pattern (regular_id) @variable.parameter)
+
+; ONLY variables in rule bodies that are NOT in premises or expressions are parameters
+((regular_id) @variable.parameter
+ (#has-ancestor? @variable.parameter rule_definition)
+ (#not-has-ancestor? @variable.parameter rule_premise)
+ (#not-has-ancestor? @variable.parameter expression))
+
+; ONLY variables in rule premises are regular variables  
+((regular_id) @variable
+ (#has-ancestor? @variable rule_premise))
+
+; ONLY variables in expressions are regular variables
+((regular_id) @variable
+ (#has-ancestor? @variable expression))
 
 ; Functions
 ; --------
@@ -30,12 +44,10 @@
 (call_expression (function_id) @function)
 (function_declaration name: (function_id) @function)
 (function_definition name: (function_id) @function)
-; (relation_definition name: (constructor_id) @function)
-; (rule_definition relation_name: (constructor_id) @function)
-(relation_id) @function
 (rule_definition rule_name: (rule_id) @function)
-(constructor_id) @constructor
-; (notation_constructor name: (camelcase_constructor_id) @constructor)
+(relation_declaration name: (relation_id) @function)
+(rule_definition relation_name: (relation_id) @function)
+(rule_premise relation_name: (relation_id) @function)
 
 ; Types
 ; --------
@@ -45,6 +57,7 @@
 (syntax_definition (syntax_id) @type)
 (syntax_declaration (syntax_id) @type)
 (notation_type_prim (syntax_id) @type)
+(type_parameters (lowercase_id) @type)
 (type) @type
 
 ; Operators from notation expressions
@@ -59,18 +72,23 @@
 
 (
   (hint_name) @function.builtin
-  (#match? @function.builtin "^(show|macro|input|desc)$")
+  (#match? @function.builtin "^(show|macro|input|desc|name)$")
 )
 
-; Constants
+; Constants and Constructors
 ; --------
 (boolean_literal) @constant
 (number_literal) @number
 (text_literal) @string
-; (constant_pattern) @constant
-; (constant_id) @constant
+(constant_notation) @constant
+(constant_id) @constant
 (hint_text) @string
 (hint_latex) @string.special
 (hint_placeholder) @string.special
 (epsilon_literal) @constant
-[ "#" ] @comment
+
+; Constructors
+; --------
+(constructor_id) @constructor
+(constructor_notation name: (constructor_id) @constructor)
+
