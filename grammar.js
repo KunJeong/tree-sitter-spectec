@@ -18,8 +18,9 @@ module.exports = grammar({
   ],
 
   conflicts: $ => [
-    [ $.syntax_id, $.regular_id ],
     [ $.syntax_id, $.constructor_id ],
+    [ $.syntax_id, $.regular_id ],
+    [ $.constructor_id, $.constant_id ],
   ],
 
   extras: $ => [
@@ -195,10 +196,21 @@ module.exports = grammar({
     // Constructor patterns in function parameters
     constructor_pattern: $ => prec.right(seq(
       field("name", $.constructor_id),
-      field("arguments", repeat1($.value_pattern))
+      field("arguments", repeat1($.constructor_pattern_arg))
     )),
 
     singleton_constructor_pattern: $ => $.constructor_id,
+
+    // Arguments that can appear in constructor patterns
+    constructor_pattern_arg: $ => choice(
+      $.regular_id,
+      $.number_literal,
+      $.epsilon_literal,
+      $.wildcard_pattern,     // Wildcards only inside constructors
+      parenthesize($.pattern), // Parenthesized patterns
+      iterate($.constructor_pattern_arg),
+      $.constructor_id,       // Nested constructors
+    ),
 
     value_pattern: $ => choice(
       $.regular_id,
@@ -206,10 +218,9 @@ module.exports = grammar({
       $.epsilon_literal,
       $.wildcard_pattern,
       parenthesize($.pattern), // Parenthesized patterns
+      iterate($.value_pattern),
     ),
 
-    // Iterator patterns like t'*
-    iterator_pattern: $ => iterate($.regular_id),
 
     // Arrow patterns like K -> V
     arrow_pattern: $ => prec.left(3, seq(
@@ -309,7 +320,7 @@ module.exports = grammar({
     // List constructor (::)
     list_constructor_expression: $ => prec.right(6, seq(
       field("head", $.expression),
-      '::',
+      token(prec(2, '::')),  // Higher token precedence to avoid conflict with :
       field("tail", $.expression)
     )),
 
@@ -461,12 +472,12 @@ module.exports = grammar({
     // atomic elements in notation expressions
     notation_atom: $ => choice(
       $.constructor_notation,     // ConstD id typ val
-      $.constant_notation,         // GLOBAL, LOCAL, LCTK
       $.atom,                     // atoms (infixops, relops, escape atoms)
       $.regular_id,               // variables like p, frame, fdenv
       $.number_literal,           // numbers
       $.text_literal,             // strings
       $.epsilon_literal,          // eps
+      // $.wildcard_pattern,         // wildcard _ (now allowed as notation atom)
       // $.call_notation,          // function calls
       // $.bracket_expression,       // `{ ... }
       parenthesize($.notation),   // (expr) - simple parentheses (higher precedence)
@@ -480,11 +491,7 @@ module.exports = grammar({
 
     // Constructor patterns in notation expressions  
     constructor_notation: $ => prec.right(2, seq(
-      field("name", choice(
-        $.constructor_id,    // CamelCase constructors like FuncD, IntV
-        // Use ambiguous_caps_id directly to avoid early resolution
-        prec.dynamic(3, alias($.all_caps_id, "constructor_caps")), // All-caps constructors like CONST, LABEL_, BLOCK
-      )),
+      field("name", $.constructor_id),
       field("fields", repeat($.value_notation))  // Allow zero or more fields
     )),
 
@@ -494,15 +501,11 @@ module.exports = grammar({
       $.text_literal,             // strings
       $.epsilon_literal,          // eps
       parenthesize($.notation),   // Parenthesized notation
-      $.uppercase_id,             // standalone constructors
+      $.constructor_id,           // standalone constructors
       $.wildcard_pattern,         // wildcard _
       seq($.regular_id, '?'),     // optional variable
       $.call_expression,          // function calls
     ),
-
-
-    // All-caps constants that don't take arguments  
-    constant_notation: $ => $.constant_id,
 
     // -------------------------
     // HINTS : only allow a subset of expressions
@@ -521,15 +524,16 @@ module.exports = grammar({
       $.hint_text,
       $.hint_placeholder,
       $.hint_latex,
-      $.hint_backtick,
-      '.',
-      '...',
-      '@',
-      ']',
-      '?',
+      $.hint_operator,       // Add support for operators using existing atoms
+      $.hint_function_id,    // Add support for function ids like $distinct
+      $.hint_parenthesized,  // Allow parenthesized hint expressions
+    ),
+
+    // Parenthesized hint expressions - can contain multiple hint elements
+    hint_parenthesized: $ => seq(
       '(',
-      ')',
-      '#',
+      repeat($._hint_element),
+      ')'
     ),
 
     hint_text: $ => token(prec(-1, /[A-Za-z_][A-Za-z0-9_]*/)),
@@ -547,10 +551,22 @@ module.exports = grammar({
       ')'
     ),
 
-    hint_backtick: $ => choice(
-      prec(1, seq('%', '`[')),
+    hint_operator: $ => choice(
+      $.atom,                    // Reuse all existing atoms (infix, relational, escape)
+      // '+', '-', '*', '/',        // Binary arithmetic operators (% handled by hint_placeholder)
+      '=', //'!=', '<', '>', '<=', '>=',  // Comparison operators  
+      // '++',                      // Concatenation operator
+      // '<-',                      // Membership operator
+      '`:',
       '`[',
+      ']',
+      // '.',
+      // '@',
+      '?',
+      '#',
     ),
+
+    hint_function_id: $ => seq('$', /[a-z][a-z0-9_'-]*/),  // Function ids like $distinct, $func
 
     // -------------------------
     // LITERALS
@@ -650,7 +666,7 @@ module.exports = grammar({
     ),
 
     // -------------------------
-    // ATOMS AND IDENTIFIERS
+    // ATOMS
     // -------------------------
     // Atoms are either infix, relational, or escaped
     atom: $ => choice(
@@ -724,32 +740,30 @@ module.exports = grammar({
     // -------------------------
     // IDENTIFIERS
     // ------------------------- 
-    // Unambiguous identifiers
-    uppercase_id: $ => /[A-Z][a-zA-Z0-9_']*/, // Starting with uppercase, hyphens not allowed
+    // Single-letter variables with optional subscripts: C, C_0, E_1, D_2  
+    single_letter_var: $ => /[A-Z](?:_\d+)?/,
+    
+    uppercase_id: $ => /[A-Z][a-zA-Z0-9_']*/, // Any uppercase-starting identifier
     lowercase_id: $ => /[a-z][a-zA-Z0-9_']*/, // Starting with lowercase, hyphens not allowed
-
-    // Ambiguous all-caps identifiers - can be variables or constants depending on context
-    all_caps_id: $ => /[A-Z][A-Z0-9_]*/, // All-caps like C, GLOBAL, C_0
+    multi_caps_id: $ => /[A-Z][A-Z0-9_']+/,  // At least 2 chars, all caps
 
     rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
     relation_id: $ => $.uppercase_id,
     function_id: $ => seq('$', choice($.lowercase_id, $.uppercase_id)), // Function identifiers like $get_int
-    constructor_id: $ => $.uppercase_id,
-    syntax_id: $ => choice($.lowercase_id, $.uppercase_id),
+    constructor_id: $ => choice(
+      $.uppercase_id,
+      $.multi_caps_id,
+    ),
+    syntax_id: $ => choice($.lowercase_id, $.uppercase_id), // type variables
 
     hint_identifier: $ => $.regular_id,
 
-    // Context-sensitive disambiguation of all-caps identifiers
-    regular_id: $ => choice(
+    regular_id: $ => choice( // variables
       $.lowercase_id,
-      // Dynamic precedence: prefer as variable in most contexts
-      prec.dynamic(2, alias($.all_caps_id, "variable_caps")),
+      prec(2, $.single_letter_var),  // Prefer single letter variables in variable contexts
     ),
 
-    constant_id: $ => choice(
-      // Dynamic precedence: lower preference, used when variable doesn't fit
-      prec.dynamic(1, alias($.all_caps_id, "constant_caps")),
-    ),
+    constant_id: $ => $.multi_caps_id,  // Constants are multi-letter all-caps
 
     // only for supertype querying
     identifier: $ => choice(

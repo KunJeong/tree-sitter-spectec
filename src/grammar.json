@@ -969,7 +969,7 @@
               "type": "REPEAT1",
               "content": {
                 "type": "SYMBOL",
-                "name": "value_pattern"
+                "name": "constructor_pattern_arg"
               }
             }
           }
@@ -979,6 +979,61 @@
     "singleton_constructor_pattern": {
       "type": "SYMBOL",
       "name": "constructor_id"
+    },
+    "constructor_pattern_arg": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "regular_id"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "number_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "epsilon_literal"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "wildcard_pattern"
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "("
+            },
+            {
+              "type": "SYMBOL",
+              "name": "pattern"
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "constructor_pattern_arg"
+            },
+            {
+              "type": "STRING",
+              "value": "*"
+            }
+          ]
+        },
+        {
+          "type": "SYMBOL",
+          "name": "constructor_id"
+        }
+      ]
     },
     "value_pattern": {
       "type": "CHOICE",
@@ -1015,19 +1070,19 @@
               "value": ")"
             }
           ]
-        }
-      ]
-    },
-    "iterator_pattern": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "regular_id"
         },
         {
-          "type": "STRING",
-          "value": "*"
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "value_pattern"
+            },
+            {
+              "type": "STRING",
+              "value": "*"
+            }
+          ]
         }
       ]
     },
@@ -1385,8 +1440,15 @@
             }
           },
           {
-            "type": "STRING",
-            "value": "::"
+            "type": "TOKEN",
+            "content": {
+              "type": "PREC",
+              "value": 2,
+              "content": {
+                "type": "STRING",
+                "value": "::"
+              }
+            }
           },
           {
             "type": "FIELD",
@@ -2183,10 +2245,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "constant_notation"
-        },
-        {
-          "type": "SYMBOL",
           "name": "atom"
         },
         {
@@ -2289,26 +2347,8 @@
             "type": "FIELD",
             "name": "name",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "constructor_id"
-                },
-                {
-                  "type": "PREC_DYNAMIC",
-                  "value": 3,
-                  "content": {
-                    "type": "ALIAS",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "all_caps_id"
-                    },
-                    "named": false,
-                    "value": "constructor_caps"
-                  }
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "constructor_id"
             }
           },
           {
@@ -2363,7 +2403,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "uppercase_id"
+          "name": "constructor_id"
         },
         {
           "type": "SYMBOL",
@@ -2387,10 +2427,6 @@
           "name": "call_expression"
         }
       ]
-    },
-    "constant_notation": {
-      "type": "SYMBOL",
-      "name": "constant_id"
     },
     "hint": {
       "type": "SEQ",
@@ -2462,39 +2498,35 @@
         },
         {
           "type": "SYMBOL",
-          "name": "hint_backtick"
+          "name": "hint_operator"
         },
         {
-          "type": "STRING",
-          "value": "."
+          "type": "SYMBOL",
+          "name": "hint_function_id"
         },
         {
-          "type": "STRING",
-          "value": "..."
-        },
-        {
-          "type": "STRING",
-          "value": "@"
-        },
-        {
-          "type": "STRING",
-          "value": "]"
-        },
-        {
-          "type": "STRING",
-          "value": "?"
-        },
+          "type": "SYMBOL",
+          "name": "hint_parenthesized"
+        }
+      ]
+    },
+    "hint_parenthesized": {
+      "type": "SEQ",
+      "members": [
         {
           "type": "STRING",
           "value": "("
         },
         {
-          "type": "STRING",
-          "value": ")"
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_hint_element"
+          }
         },
         {
           "type": "STRING",
-          "value": "#"
+          "value": ")"
         }
       ]
     },
@@ -2569,29 +2601,49 @@
         }
       ]
     },
-    "hint_backtick": {
+    "hint_operator": {
       "type": "CHOICE",
       "members": [
         {
-          "type": "PREC",
-          "value": 1,
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "%"
-              },
-              {
-                "type": "STRING",
-                "value": "`["
-              }
-            ]
-          }
+          "type": "SYMBOL",
+          "name": "atom"
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "STRING",
+          "value": "`:"
         },
         {
           "type": "STRING",
           "value": "`["
+        },
+        {
+          "type": "STRING",
+          "value": "]"
+        },
+        {
+          "type": "STRING",
+          "value": "?"
+        },
+        {
+          "type": "STRING",
+          "value": "#"
+        }
+      ]
+    },
+    "hint_function_id": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "$"
+        },
+        {
+          "type": "PATTERN",
+          "value": "[a-z][a-z0-9_'-]*"
         }
       ]
     },
@@ -3349,6 +3401,10 @@
       "type": "SYMBOL",
       "name": "atom"
     },
+    "single_letter_var": {
+      "type": "PATTERN",
+      "value": "[A-Z](?:_\\d+)?"
+    },
     "uppercase_id": {
       "type": "PATTERN",
       "value": "[A-Z][a-zA-Z0-9_']*"
@@ -3357,9 +3413,9 @@
       "type": "PATTERN",
       "value": "[a-z][a-zA-Z0-9_']*"
     },
-    "all_caps_id": {
+    "multi_caps_id": {
       "type": "PATTERN",
-      "value": "[A-Z][A-Z0-9_]*"
+      "value": "[A-Z][A-Z0-9_']+"
     },
     "rule_id": {
       "type": "PATTERN",
@@ -3392,8 +3448,17 @@
       ]
     },
     "constructor_id": {
-      "type": "SYMBOL",
-      "name": "uppercase_id"
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "uppercase_id"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "multi_caps_id"
+        }
+      ]
     },
     "syntax_id": {
       "type": "CHOICE",
@@ -3420,37 +3485,18 @@
           "name": "lowercase_id"
         },
         {
-          "type": "PREC_DYNAMIC",
+          "type": "PREC",
           "value": 2,
           "content": {
-            "type": "ALIAS",
-            "content": {
-              "type": "SYMBOL",
-              "name": "all_caps_id"
-            },
-            "named": false,
-            "value": "variable_caps"
+            "type": "SYMBOL",
+            "name": "single_letter_var"
           }
         }
       ]
     },
     "constant_id": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "PREC_DYNAMIC",
-          "value": 1,
-          "content": {
-            "type": "ALIAS",
-            "content": {
-              "type": "SYMBOL",
-              "name": "all_caps_id"
-            },
-            "named": false,
-            "value": "constant_caps"
-          }
-        }
-      ]
+      "type": "SYMBOL",
+      "name": "multi_caps_id"
     },
     "identifier": {
       "type": "CHOICE",
@@ -3499,11 +3545,15 @@
   "conflicts": [
     [
       "syntax_id",
-      "regular_id"
+      "constructor_id"
     ],
     [
       "syntax_id",
-      "constructor_id"
+      "regular_id"
+    ],
+    [
+      "constructor_id",
+      "constant_id"
     ]
   ],
   "precedences": [],

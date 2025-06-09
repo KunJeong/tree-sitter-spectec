@@ -38,6 +38,8 @@
 ((regular_id) @variable
  (#has-ancestor? @variable expression))
 
+((regular_id) @variable.parameter
+ (#has-ancestor? @variable.parameter constructor_pattern_arg))
 ; Functions
 ; --------
 
@@ -80,11 +82,13 @@
 (boolean_literal) @constant
 (number_literal) @number
 (text_literal) @string
-(constant_notation) @constant
-(constant_id) @constant
+; (constant_notation) @constant
+; (constant_id) @constant
 (hint_text) @string
 (hint_latex) @string.special
 (hint_placeholder) @string.special
+(hint_operator) @string         ; Operators in hints treated as hint text
+(hint_function_id) @string      ; Function ids in hints treated as hint text
 (epsilon_literal) @constant
 
 ; Constructors
