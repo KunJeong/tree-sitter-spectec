@@ -1,0 +1,6 @@
+Vendored read-only copies of the SpecTecX surface-syntax sources, kept
+as a reference while editing grammar.js. Do not edit by hand.
+
+synced-from: origin/main
+commit:      01e060f45
+refresh:     scripts/sync-references.sh [--ref REF] [--repo DIR]

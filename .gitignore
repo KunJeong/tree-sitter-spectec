@@ -75,3 +75,8 @@ __pycache__/
 
 # Tree-sitter generated files
 parser.so
+
+# Vendored SpecTecX reference sources (regenerate: npm run sync-references).
+# Only the SOURCE pin is tracked; the copies are reproducible.
+/references/*
+!/references/SOURCE
