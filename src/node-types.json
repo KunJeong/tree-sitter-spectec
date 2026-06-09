@@ -225,24 +225,19 @@
       "required": true,
       "types": [
         {
-          "type": "atom_escape",
-          "named": true
-        },
-        {
           "type": "atom_infix",
           "named": true
         },
         {
           "type": "atom_relational",
           "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
         }
       ]
     }
-  },
-  {
-    "type": "atom_escape",
-    "named": true,
-    "fields": {}
   },
   {
     "type": "atom_infix",
@@ -426,6 +421,32 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "builtin_generator_declaration",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "function_id",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -645,6 +666,10 @@
       "types": [
         {
           "type": "multi_caps_id",
+          "named": true
+        },
+        {
+          "type": "tag",
           "named": true
         },
         {
@@ -1283,6 +1308,10 @@
         {
           "type": "tuple_notation",
           "named": true
+        },
+        {
+          "type": "wildcard_pattern",
+          "named": true
         }
       ]
     }
@@ -1509,6 +1538,60 @@
     }
   },
   {
+    "type": "property_definition",
+    "named": true,
+    "fields": {
+      "conclusion": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "rule_premise",
+            "named": true
+          }
+        ]
+      },
+      "hints": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "hint",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "relation_id",
+            "named": true
+          }
+        ]
+      },
+      "premises": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "\n",
+            "named": false
+          },
+          {
+            "type": "--",
+            "named": false
+          },
+          {
+            "type": "premise",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "regular_id",
     "named": true,
     "fields": {},
@@ -1703,11 +1786,19 @@
       "required": false,
       "types": [
         {
+          "type": "builtin_generator_declaration",
+          "named": true
+        },
+        {
           "type": "function_declaration",
           "named": true
         },
         {
           "type": "function_definition",
+          "named": true
+        },
+        {
+          "type": "property_definition",
           "named": true
         },
         {
@@ -2302,71 +2393,11 @@
     "named": false
   },
   {
-    "type": "^|^",
-    "named": false
-  },
-  {
-    "type": "_|_",
-    "named": false
-  },
-  {
     "type": "`(",
     "named": false
   },
   {
-    "type": "`*",
-    "named": false
-  },
-  {
-    "type": "`+",
-    "named": false
-  },
-  {
-    "type": "`++",
-    "named": false
-  },
-  {
-    "type": "`,",
-    "named": false
-  },
-  {
     "type": "`:",
-    "named": false
-  },
-  {
-    "type": "`<",
-    "named": false
-  },
-  {
-    "type": "`<-",
-    "named": false
-  },
-  {
-    "type": "`<=",
-    "named": false
-  },
-  {
-    "type": "`=",
-    "named": false
-  },
-  {
-    "type": "`=/=",
-    "named": false
-  },
-  {
-    "type": "`=>",
-    "named": false
-  },
-  {
-    "type": "`>",
-    "named": false
-  },
-  {
-    "type": "`>=",
-    "named": false
-  },
-  {
-    "type": "`?",
     "named": false
   },
   {
@@ -2378,12 +2409,12 @@
     "named": false
   },
   {
-    "type": "`|",
-    "named": false
-  },
-  {
     "type": "bool_type",
     "named": true
+  },
+  {
+    "type": "builtin",
+    "named": false
   },
   {
     "type": "comment",
@@ -2415,6 +2446,10 @@
     "named": false
   },
   {
+    "type": "generator",
+    "named": false
+  },
+  {
     "type": "hint",
     "named": false
   },
@@ -2424,10 +2459,6 @@
   },
   {
     "type": "if",
-    "named": false
-  },
-  {
-    "type": "infinity",
     "named": false
   },
   {
@@ -2455,6 +2486,22 @@
     "named": true
   },
   {
+    "type": "operator",
+    "named": true
+  },
+  {
+    "type": "property",
+    "named": false
+  },
+  {
+    "type": "prose",
+    "named": false
+  },
+  {
+    "type": "prose_in",
+    "named": false
+  },
+  {
     "type": "relation",
     "named": false
   },
@@ -2478,6 +2525,10 @@
   {
     "type": "syntax",
     "named": false
+  },
+  {
+    "type": "tag",
+    "named": true
   },
   {
     "type": "text_type",

@@ -42,6 +42,8 @@ module.exports = grammar({
       $.rule_definition, // `rule` id`/`id `:` exp list(`--` prem, nl)
       $.function_declaration, // `dec` id `<` list(tparam, `,`) `>` list(param, `,`) `:` plaintyp hint*
       $.function_definition, // `def` id `<` list(tparam, `,`) `>` list(arg, `,`) `=` exp list(`--` prem, nl)
+      $.builtin_generator_declaration, // `builtin` `generator` id `:` plaintyp
+      $.property_definition, // `property` id hint* `:` prem list(`--` prem, nl)
     ),
 
     comment: $ => token(seq(';;', /[^\r\n]*/)), // Line comments starting with `;;`
@@ -114,6 +116,25 @@ module.exports = grammar({
       '=',
       field("return", $.expression),
       field("premises", repeat(seq('--', $.premise)))
+    ),
+
+    // `builtin generator $gen : typ` declares a quickcheck input generator.
+    builtin_generator_declaration: $ => seq(
+      'builtin',
+      'generator',
+      field("name", $.function_id),
+      ':',
+      field("type", $.type),
+    ),
+
+    // `property Id hint* : conclusion -- prem*` is a quickcheck property.
+    property_definition: $ => seq(
+      'property',
+      field("name", $.relation_id),
+      field("hints", repeat($.hint)),
+      ':',
+      field("conclusion", $.rule_premise),
+      field("premises", repeat(seq('--', $.premise, '\n'))),
     ),
 
     separator: $ => '----',
@@ -477,9 +498,7 @@ module.exports = grammar({
       $.number_literal,           // numbers
       $.text_literal,             // strings
       $.epsilon_literal,          // eps
-      // $.wildcard_pattern,         // wildcard _ (now allowed as notation atom)
-      // $.call_notation,          // function calls
-      // $.bracket_expression,       // `{ ... }
+      $.wildcard_pattern,         // wildcard _
       parenthesize($.notation),   // (expr) - simple parentheses (higher precedence)
       $.tuple_notation,           // (a, b) - tuples with commas
       iterate($.notation_atom),
@@ -518,7 +537,7 @@ module.exports = grammar({
       ')'
     ),
 
-    hint_name: $ => choice('input', 'show', 'macro', 'desc', 'name'),
+    hint_name: $ => choice('input', 'show', 'macro', 'desc', 'name', 'prose', 'prose_in', 'generator'),
 
     _hint_element: $ => choice(
       $.hint_text,
@@ -671,8 +690,8 @@ module.exports = grammar({
     // Atoms are either infix, relational, or escaped
     atom: $ => choice(
       $.atom_infix,
-      $.atom_relational, 
-      $.atom_escape,
+      $.atom_relational,
+      $.operator,
     ),
 
     atom_infix: $ => choice(
@@ -714,26 +733,8 @@ module.exports = grammar({
       "|-_"     // Atom.TurnstileSub
     ),
 
-    // Escape atoms - operators prefixed with backtick to use as literals
-    atom_escape: $ => choice(
-      token(prec(3, "`=")),       // Atom.Equal
-      token(prec(3, "`=/=")),     // Atom.NotEqual
-      token(prec(3, "`<")),       // Atom.Less
-      token(prec(3, "`>")),       // Atom.Greater
-      token(prec(3, "`<=")),      // Atom.LessEqual
-      token(prec(3, "`>=")),      // Atom.GreaterEqual
-      token(prec(3, "`<-")),      // Atom.Mem
-      token(prec(3, "`?")),       // Atom.Quest
-      token(prec(3, "`+")),       // Atom.Plus
-      token(prec(3, "`*")),       // Atom.Star
-      token(prec(3, "`|")),       // Atom.Bar
-      token(prec(3, "`++")),      // Atom.Cat
-      token(prec(3, "`,")),       // Atom.Comma
-      token(prec(3, "`=>")),      // Atom.Arrow2
-      "_|_",                      // Atom.Bot
-      "^|^",                      // Atom.Top
-      "infinity",                 // Atom.Infinity
-    ),
+    // Concrete operators are single-quoted, e.g. '+', '->', '&&'.
+    operator: $ => token(seq("'", /[^'\n]*/, "'")),
 
     atom_expression: $ => $.atom,
 
@@ -753,7 +754,11 @@ module.exports = grammar({
     constructor_id: $ => choice(
       $.uppercase_id,
       $.multi_caps_id,
+      $.tag,
     ),
+
+    // Abstract words: underscore-prefixed uppercase, e.g. _NUM, _BOOL, _ID.
+    tag: $ => token(/_[A-Z][A-Za-z0-9_']*/),
     syntax_id: $ => choice($.lowercase_id, $.uppercase_id), // type variables
 
     hint_identifier: $ => $.regular_id,

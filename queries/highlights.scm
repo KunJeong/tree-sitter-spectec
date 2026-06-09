@@ -66,16 +66,13 @@
 (atom) @operator
 (atom_infix) @operator
 (atom_relational) @operator
-(atom_escape) @operator
+(operator) @operator
 
 ; Notation expression components
 (notation_rel operator: (_) @operator)
 (notation_bin operator: (_) @operator)
 
-(
-  (hint_name) @function.builtin
-  (#match? @function.builtin "^(show|macro|input|desc|name)$")
-)
+(hint_name) @function.builtin
 
 ; Constants and Constructors
 ; --------
@@ -95,4 +92,7 @@
 ; --------
 (constructor_id) @constructor
 (constructor_notation name: (constructor_id) @constructor)
+
+; Tags (abstract words) override the surrounding constructor capture.
+(tag) @tag
 
