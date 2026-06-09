@@ -1,0 +1,32 @@
+==================
+variable declaration
+==================
+
+var x : nat
+
+---
+
+(source_file
+  (variable_definition
+    name: (syntax_id
+      (lowercase_id))
+    type: (plain_type
+      (base_type
+        (natural_type)))))
+
+==================
+syntax type alias
+==================
+
+syntax b = bool
+
+---
+
+(source_file
+  (syntax_definition
+    (syntax_id
+      (lowercase_id))
+    (syntax_body
+      (plain_type
+        (base_type
+          (bool_type))))))
