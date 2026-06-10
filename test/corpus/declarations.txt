@@ -27,6 +27,8 @@ syntax b = bool
     (syntax_id
       (lowercase_id))
     (syntax_body
-      (plain_type
-        (base_type
-          (bool_type))))))
+      (syntax_variant
+        (notation_type
+          (plain_type
+            (base_type
+              (bool_type))))))))

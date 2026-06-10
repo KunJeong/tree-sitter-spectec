@@ -5,8 +5,8 @@
 (else_premise) @keyword
 (if_premise "if" @keyword)
 
-[ "(" "`(" "`{" "[" "`["] @punctuation.bracket.open
-[ ")" "}" "]" ] @punctuation.bracket.close
+[ "(" "`(" "`{" "[" "`[" "`<" ] @punctuation.bracket.open
+[ ")" "}" "]" "`)" "`}" "`]" "`>" ] @punctuation.bracket.close
 (type_parameters ["<" ">"] @punctuation.bracket.angle)
 
 [":" "," "." "|" "/"] @punctuation.delimiter
@@ -58,7 +58,6 @@
 (plain_type) @type
 (syntax_definition (syntax_id) @type)
 (syntax_declaration (syntax_id) @type)
-(notation_type_prim (syntax_id) @type)
 (type_parameters (lowercase_id) @type)
 (type) @type
 

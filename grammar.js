@@ -139,29 +139,15 @@ module.exports = grammar({
 
     separator: $ => '----',
 
-    syntax_body: $ => choice( // El.deftyp
-      // Named variants: | variant1 | variant2  (with leading |)
-      repeat1(seq('|', $.syntax_variant)),
-      // Named variants: variant1 | variant2 (without leading |)
-      seq($.syntax_variant, repeat1(seq('|', $.syntax_variant))),
-      // Single syntax variant (higher precedence than plain type)
-      prec(3, $.syntax_variant),
-      // Unnamed variant (singleton): syntax paramtyp = id dir typ (multiple types)
-      prec(2, $.unnamed_variant),
-      // Simple assignment: syntax tid = id (single type)
-      prec(1, $.plain_type),
+    // El.deftyp: a bar-separated list of cases. A single bare case is a plain
+    // alias (`syntax id = _ID text`); the leading bar is optional.
+    syntax_body: $ => choice(
+      repeat1(seq('|', $.syntax_variant)),                       // | A | B
+      seq($.syntax_variant, repeat(seq('|', $.syntax_variant))), // A | B  or single A
     ),
 
-    unnamed_variant: $ => seq($.type, repeat1($.type)), // At least 2 types like "id dir typ"
-
-    syntax_variant: $ => choice( // El.typcase
-      // Constructor with types and optional hint (higher precedence)
-      prec(3, seq($.constructor_id, repeat1($.type), optional($.hint))), 
-      // Constructor with hint but no types
-      prec(2, seq($.constructor_id, $.hint)), 
-      // Constructor only (lowest precedence)
-      prec(1, $.constructor_id), 
-    ),
+    // El.typcase: one case of a variant, a notation type with optional hints.
+    syntax_variant: $ => seq($.notation_type, repeat($.hint)),
 
     type_parameters: $ => seq(
       '<',
@@ -207,11 +193,11 @@ module.exports = grammar({
       field("tail", $.pattern)
     )),
 
-    // Bracket patterns like `{ K'* }
+    // Bracket patterns like `{ K'* `}
     bracket_pattern: $ => choice(
-      seq('`{', optional($.pattern), '}'),
-      seq('`[', optional($.pattern), ']'),
-      seq('`(', optional($.pattern), ')'),
+      seq('`{', optional($.pattern), '`}'),
+      seq('`[', optional($.pattern), '`]'),
+      seq('`(', optional($.pattern), '`)'),
     ),
 
     // Constructor patterns in function parameters
@@ -303,12 +289,14 @@ module.exports = grammar({
 
       // Arithmetic
       $.arithmetic_expression,
+      $.unary_expression,         // ~ e, - e, + e
 
       // Collection operations
       $.list_constructor_expression,
       $.concatenation_expression,
       $.membership_expression,
       $.arrow_expression,
+      $.logical_expression,
       $.assignment_expression,
 
       // Structure
@@ -319,6 +307,12 @@ module.exports = grammar({
       iterate($.expression),
       parenthesize($.expression),
     ),
+
+    // Prefix unary operators: logical not and sign.
+    unary_expression: $ => prec.right(8, seq(
+      field("operator", choice('~', '-', '+')),
+      field("operand", $.expression),
+    )),
 
     variable_expression: $ => $.regular_id,
 
@@ -364,6 +358,13 @@ module.exports = grammar({
       field("right", $.expression)
     )),
 
+    // Boolean connectives: /\ \/ => <=>
+    logical_expression: $ => prec.left(2, seq(
+      field("left", $.expression),
+      field("operator", choice('/\\', '\\/', '=>', '<=>')),
+      field("right", $.expression)
+    )),
+
     // Function calls
     call_expression: $ => choice(
       // Function call with arguments (and optional type parameters) - higher precedence
@@ -399,14 +400,14 @@ module.exports = grammar({
       field("right", $.expression)
     )),
 
-    // Backtick tuple patterns like `(typ_e; LCTK) for annot
+    // Backtick tuple patterns like `(typ_e; LCTK `) for annot
     backtick_tuple_pattern: $ => seq(
       '`(',
       choice(
-        seq($.regular_id, ';', $.regular_id),   // `(typ_e; LCTK)
-        seq('_', ';', $.regular_id),            // `(_; LCTK)
+        seq($.regular_id, ';', $.regular_id),   // `(typ_e; LCTK `)
+        seq('_', ';', $.regular_id),            // `(_; LCTK `)
       ),
-      ')'
+      '`)'
     ),
 
     tuple_expression: $ => parenthesize(seq(
@@ -429,11 +430,11 @@ module.exports = grammar({
       ']'
     ),
 
-    // Bracket expressions - Spectec uses `{...}, `[...], `(...)
+    // Bracket expressions - Spectec uses `{...`}, `[...`], `(...`)
     bracket_expression: $ => choice(
-      seq('`{', optional($.expression), '}'),
-      seq('`[', optional($.expression), ']'),
-      seq('`(', optional($.expression), ')'),
+      seq('`{', optional($.expression), '`}'),
+      seq('`[', optional($.expression), '`]'),
+      seq('`(', optional($.expression), '`)'),
     ),
 
     arithmetic_expression: $ => seq('$', '(', $._arithmetic_expr, ')'),
@@ -501,7 +502,16 @@ module.exports = grammar({
       $.wildcard_pattern,         // wildcard _
       parenthesize($.notation),   // (expr) - simple parentheses (higher precedence)
       $.tuple_notation,           // (a, b) - tuples with commas
+      $.bracket_notation,         // `( e `), `{ e `}, `[ e `], `< e `>
       iterate($.notation_atom),
+    ),
+
+    // Backtick-bracket groups in notation, e.g. `( t x `) or `{ e `}.
+    bracket_notation: $ => choice(
+      seq('`<', $.notation, '`>'),
+      seq('`(', $.notation, '`)'),
+      seq('`[', $.notation, '`]'),
+      seq('`{', $.notation, '`}'),
     ),
 
     tuple_notation: $ => parenthesize(seq(
@@ -537,10 +547,14 @@ module.exports = grammar({
       ')'
     ),
 
-    hint_name: $ => choice('input', 'show', 'macro', 'desc', 'name', 'prose', 'prose_in', 'generator'),
+    hint_name: $ => choice(
+      'input', 'show', 'macro', 'desc', 'name', 'generator',
+      'prose', 'prose_in', 'prose_true', 'prose_false',
+    ),
 
     _hint_element: $ => choice(
       $.hint_text,
+      $.text_literal,        // Quoted prose, e.g. hint(prose "the integer" %0)
       $.hint_placeholder,
       $.hint_latex,
       $.hint_operator,       // Add support for operators using existing atoms
@@ -648,40 +662,60 @@ module.exports = grammar({
     ),
 
     // -------------------------
-    // NOTATION TYPES (for relations)
+    // NOTATION TYPES
     // -------------------------
-    notation_type: $ => choice(
-      $._notation_type_rel,
-    ),
+    // El.typ: the body of `syntax` definitions and `relation` declarations.
+    // A relational/infix/sequence tower over primitive types and atoms,
+    // mirroring the frontend's typ_rel / typ_bin / typ_seq / typ_prim.
+    notation_type: $ => $._notation_type_rel,
 
-    _notation_type_post: $ => choice(
-      $.notation_type_prim,
-      prec(3, iterate($.notation_type_prim)),  // Higher precedence for iterators
-    ),
-
-    notation_type_prim: $ => choice(
-      $.syntax_id,
-      $.atom,
-      iterate($.notation_type),
-      parenthesize($.notation_type), // Allow parenthesized notation types
-      seq('(', $.notation_type, repeat(seq(',', $.notation_type)), ')'), // Allow tuples
-    ),
-
-    _notation_type_seq: $ => choice(
-      $._notation_type_post,
-      prec.left(1, seq($._notation_type_post, $._notation_type_seq)),  // Lower precedence for sequences
-    ),
-
-    _notation_type_un: $ => choice(
-      $._notation_type_seq,
+    _notation_type_rel: $ => choice(
+      $._notation_type_bin,
+      prec.right(1, seq(                          // |- prog        (prefix relop)
+        field("operator", $.atom_relational),
+        field("right", $._notation_type_rel),
+      )),
+      prec.left(1, seq(                           // C |- e : t     (infix relop)
+        field("left", $._notation_type_rel),
+        field("operator", $.atom_relational),
+        field("right", $._notation_type_rel),
+      )),
     ),
 
     _notation_type_bin: $ => choice(
       $._notation_type_un,
+      prec.left(2, seq(                           // K -> V         (infix infixop)
+        field("left", $._notation_type_bin),
+        field("operator", $.atom_infix),
+        field("right", $._notation_type_bin),
+      )),
     ),
 
-    _notation_type_rel: $ => choice(
-      $._notation_type_bin,
+    _notation_type_un: $ => choice(
+      $._notation_type_seq,
+      prec.right(3, seq(                          // -> V           (prefix infixop)
+        field("operator", $.atom_infix),
+        field("right", $._notation_type_un),
+      )),
+    ),
+
+    _notation_type_seq: $ => prec.right(4, seq(   // _NUM int, IF e THEN c END
+      $._notation_type_prim,
+      repeat($._notation_type_prim),
+    )),
+
+    _notation_type_prim: $ => choice(
+      prec(2, $.constructor_id),                  // keyword/tag atoms: INT, _NUM, SKIP
+      $.plain_type,                               // type names, generics, tuples, iteration
+      $.operator,                                 // quoted operators: '+', '!', '='
+      $.bracket_notation_type,                    // `< typ `>, `( typ `), `[ typ `], `{ typ `}
+    ),
+
+    bracket_notation_type: $ => choice(
+      seq('`<', $.notation_type, '`>'),
+      seq('`(', $.notation_type, '`)'),
+      seq('`[', $.notation_type, '`]'),
+      seq('`{', $.notation_type, '`}'),
     ),
 
     // -------------------------
@@ -702,7 +736,8 @@ module.exports = grammar({
       "\\",     // Atom.Backslash
       "->",     // Atom.Arrow
       "->_",    // Atom.ArrowSub
-      "=>_",    // Atom.Arrow2Sub
+      "=>_",    // Atom.DoubleArrowSub
+      "==>",    // Atom.DoubleArrowLong
       "(/\\)",  // Atom.BigAnd
       "(\\/)",  // Atom.BigOr
       "(+)",    // Atom.BigAdd
@@ -742,11 +777,14 @@ module.exports = grammar({
     // IDENTIFIERS
     // ------------------------- 
     // Single-letter variables with optional subscripts: C, C_0, E_1, D_2  
-    single_letter_var: $ => /[A-Z](?:_\d+)?/,
-    
+    // Lexical precedence breaks ties when several id tokens match the same text:
+    // a single capital (with optional subscript) is a variable, an all-caps word
+    // is a keyword atom / constructor, and anything else uppercase is a name.
+    single_letter_var: $ => token(prec(2, /[A-Z](?:_\d+)?/)),
+
     uppercase_id: $ => /[A-Z][a-zA-Z0-9_']*/, // Any uppercase-starting identifier
     lowercase_id: $ => /[a-z][a-zA-Z0-9_']*/, // Starting with lowercase, hyphens not allowed
-    multi_caps_id: $ => /[A-Z][A-Z0-9_']+/,  // At least 2 chars, all caps
+    multi_caps_id: $ => token(prec(1, /[A-Z][A-Z0-9_']+/)),  // At least 2 chars, all caps
 
     rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
     relation_id: $ => $.uppercase_id,

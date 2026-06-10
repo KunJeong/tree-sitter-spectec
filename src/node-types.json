@@ -409,6 +409,36 @@
     }
   },
   {
+    "type": "bracket_notation",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "notation",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "bracket_notation_type",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "notation_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "bracket_pattern",
     "named": true,
     "fields": {},
@@ -827,6 +857,10 @@
           "named": true
         },
         {
+          "type": "logical_expression",
+          "named": true
+        },
+        {
           "type": "membership_expression",
           "named": true
         },
@@ -844,6 +878,10 @@
         },
         {
           "type": "tuple_expression",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
           "named": true
         },
         {
@@ -1042,6 +1080,10 @@
         {
           "type": "hint_text",
           "named": true
+        },
+        {
+          "type": "text_literal",
+          "named": true
         }
       ]
     }
@@ -1116,6 +1158,10 @@
         },
         {
           "type": "hint_text",
+          "named": true
+        },
+        {
+          "type": "text_literal",
           "named": true
         }
       ]
@@ -1244,6 +1290,54 @@
     }
   },
   {
+    "type": "logical_expression",
+    "named": true,
+    "fields": {
+      "left": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "/\\",
+            "named": false
+          },
+          {
+            "type": "<=>",
+            "named": false
+          },
+          {
+            "type": "=>",
+            "named": false
+          },
+          {
+            "type": "\\/",
+            "named": false
+          }
+        ]
+      },
+      "right": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "membership_expression",
     "named": true,
     "fields": {
@@ -1279,6 +1373,10 @@
       "types": [
         {
           "type": "atom",
+          "named": true
+        },
+        {
+          "type": "bracket_notation",
           "named": true
         },
         {
@@ -1418,36 +1516,100 @@
   {
     "type": "notation_type",
     "named": true,
-    "fields": {},
+    "fields": {
+      "left": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "atom_infix",
+            "named": true
+          },
+          {
+            "type": "atom_relational",
+            "named": true
+          },
+          {
+            "type": "bracket_notation_type",
+            "named": true
+          },
+          {
+            "type": "constructor_id",
+            "named": true
+          },
+          {
+            "type": "operator",
+            "named": true
+          },
+          {
+            "type": "plain_type",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "atom_infix",
+            "named": true
+          },
+          {
+            "type": "atom_relational",
+            "named": true
+          }
+        ]
+      },
+      "right": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "atom_infix",
+            "named": true
+          },
+          {
+            "type": "atom_relational",
+            "named": true
+          },
+          {
+            "type": "bracket_notation_type",
+            "named": true
+          },
+          {
+            "type": "constructor_id",
+            "named": true
+          },
+          {
+            "type": "operator",
+            "named": true
+          },
+          {
+            "type": "plain_type",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
-          "type": "notation_type_prim",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "notation_type_prim",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "atom",
+          "type": "bracket_notation_type",
           "named": true
         },
         {
-          "type": "notation_type",
+          "type": "constructor_id",
           "named": true
         },
         {
-          "type": "syntax_id",
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "plain_type",
           "named": true
         }
       ]
@@ -1833,15 +1995,7 @@
       "required": true,
       "types": [
         {
-          "type": "plain_type",
-          "named": true
-        },
-        {
           "type": "syntax_variant",
-          "named": true
-        },
-        {
-          "type": "unnamed_variant",
           "named": true
         }
       ]
@@ -1938,15 +2092,11 @@
       "required": true,
       "types": [
         {
-          "type": "constructor_id",
-          "named": true
-        },
-        {
           "type": "hint",
           "named": true
         },
         {
-          "type": "type",
+          "type": "notation_type",
           "named": true
         }
       ]
@@ -2037,18 +2187,37 @@
     }
   },
   {
-    "type": "unnamed_variant",
+    "type": "unary_expression",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "type",
-          "named": true
-        }
-      ]
+    "fields": {
+      "operand": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "operator": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "+",
+            "named": false
+          },
+          {
+            "type": "-",
+            "named": false
+          },
+          {
+            "type": "~",
+            "named": false
+          }
+        ]
+      }
     }
   },
   {
@@ -2301,6 +2470,10 @@
     "named": false
   },
   {
+    "type": "/\\",
+    "named": false
+  },
+  {
     "type": ":",
     "named": false
   },
@@ -2345,6 +2518,10 @@
     "named": false
   },
   {
+    "type": "<=>",
+    "named": false
+  },
+  {
     "type": "=",
     "named": false
   },
@@ -2353,7 +2530,15 @@
     "named": false
   },
   {
+    "type": "==>",
+    "named": false
+  },
+  {
     "type": "==_",
+    "named": false
+  },
+  {
+    "type": "=>",
     "named": false
   },
   {
@@ -2389,6 +2574,10 @@
     "named": false
   },
   {
+    "type": "\\/",
+    "named": false
+  },
+  {
     "type": "]",
     "named": false
   },
@@ -2397,7 +2586,19 @@
     "named": false
   },
   {
+    "type": "`)",
+    "named": false
+  },
+  {
     "type": "`:",
+    "named": false
+  },
+  {
+    "type": "`<",
+    "named": false
+  },
+  {
+    "type": "`>",
     "named": false
   },
   {
@@ -2405,7 +2606,15 @@
     "named": false
   },
   {
+    "type": "`]",
+    "named": false
+  },
+  {
     "type": "`{",
+    "named": false
+  },
+  {
+    "type": "`}",
     "named": false
   },
   {
@@ -2498,7 +2707,15 @@
     "named": false
   },
   {
+    "type": "prose_false",
+    "named": false
+  },
+  {
     "type": "prose_in",
+    "named": false
+  },
+  {
+    "type": "prose_true",
     "named": false
   },
   {
@@ -2563,7 +2780,7 @@
     "named": false
   },
   {
-    "type": "}",
+    "type": "~",
     "named": false
   },
   {

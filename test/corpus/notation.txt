@@ -1,0 +1,114 @@
+==================
+syntax body: infix arrow notation
+==================
+
+syntax pair<K, V> = K -> V
+
+---
+
+(source_file
+  (syntax_definition
+    (syntax_id
+      (lowercase_id))
+    (type_parameters
+      (uppercase_id)
+      (uppercase_id))
+    (syntax_body
+      (syntax_variant
+        (notation_type
+          left: (plain_type
+            (base_type
+              (syntax_id
+                (uppercase_id))))
+          operator: (atom_infix)
+          right: (plain_type
+            (base_type
+              (syntax_id
+                (uppercase_id)))))))))
+
+==================
+syntax body: tagged case with a hint
+==================
+
+syntax literal =
+  | _NUM int hint(prose "the integer" %0)
+
+---
+
+(source_file
+  (syntax_definition
+    (syntax_id
+      (lowercase_id))
+    (syntax_body
+      (syntax_variant
+        (notation_type
+          (constructor_id
+            (tag))
+          (plain_type
+            (base_type
+              (syntax_id
+                (lowercase_id)))))
+        (hint
+          (hint_name)
+          (text_literal)
+          (hint_placeholder))))))
+
+==================
+syntax body: keyword atoms and operators
+==================
+
+syntax command =
+  | SKIP
+  | id '=' expr
+
+---
+
+(source_file
+  (syntax_definition
+    (syntax_id
+      (lowercase_id))
+    (syntax_body
+      (syntax_variant
+        (notation_type
+          (constructor_id
+            (multi_caps_id))))
+      (syntax_variant
+        (notation_type
+          (plain_type
+            (base_type
+              (syntax_id
+                (lowercase_id))))
+          (operator)
+          (plain_type
+            (base_type
+              (syntax_id
+                (lowercase_id)))))))))
+
+==================
+relation body: turnstile and double arrow
+==================
+
+relation Eval_expr:
+  env |- expr ==> value
+
+---
+
+(source_file
+  (relation_declaration
+    name: (relation_id
+      (uppercase_id))
+    body: (notation_type
+      left: (plain_type
+        (base_type
+          (syntax_id
+            (lowercase_id))))
+      operator: (atom_relational)
+      left: (plain_type
+        (base_type
+          (syntax_id
+            (lowercase_id))))
+      operator: (atom_infix)
+      right: (plain_type
+        (base_type
+          (syntax_id
+            (lowercase_id)))))))
