@@ -77,8 +77,8 @@ install: all
 	install -m755 lib$(LANGUAGE_NAME).$(SOEXT) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXTVER)
 	ln -sf lib$(LANGUAGE_NAME).$(SOEXTVER) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXTVER_MAJOR)
 	ln -sf lib$(LANGUAGE_NAME).$(SOEXTVER_MAJOR) '$(DESTDIR)$(LIBDIR)'/lib$(LANGUAGE_NAME).$(SOEXT)
-ifneq ($(wildcard queries/*.scm),)
-	install -m644 queries/*.scm '$(DESTDIR)$(DATADIR)'/tree-sitter/queries/spectec
+ifneq ($(wildcard queries/spectec/*.scm),)
+	install -m644 queries/spectec/*.scm '$(DESTDIR)$(DATADIR)'/tree-sitter/queries/spectec
 endif
 
 uninstall:
@@ -96,6 +96,11 @@ clean:
 test:
 	$(TS) test
 
+# Compile the committed parser into parser/spectec.so for Neovim's native
+# runtime. Used as the plugin build step; needs only a C compiler.
+parser:
+	@./scripts/build-parser.sh
+
 # Development targets
 dev-install: generate
 	@echo "🔧 Installing parser for Neovim development..."
@@ -105,4 +110,4 @@ generate:
 	@echo "🔧 Generating parser from grammar.js..."
 	@tree-sitter generate
 
-.PHONY: all install uninstall clean dev-install generate test
+.PHONY: all install uninstall clean parser dev-install generate test

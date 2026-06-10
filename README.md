@@ -7,99 +7,59 @@ This grammar is currently a minimal subset of the full SpecTec grammar, to suppo
 
 ## Installation
 
-### Neovim (with nvim-treesitter)
+### Neovim
 
-Add the parser configuration to your Neovim setup. The exact method depends on your plugin manager:
+This repository is a self-contained Neovim plugin: installing it registers the `.spectec` / `.watsup` filetypes, ships the highlight queries on the runtimepath, and compiles the parser in a one-time build step. It needs a **C compiler**, but **not** nvim-treesitter or the tree-sitter CLI - so it behaves the same on any Neovim 0.9+ (and on either nvim-treesitter branch, or none).
 
-#### Lazy.nvim
-
-Add this to your `nvim-treesitter` configuration:
+With **lazy.nvim**:
 
 ```lua
-{
-  "nvim-treesitter/nvim-treesitter",
-  build = ":TSUpdate",
-  config = function()
-    local configs = require("nvim-treesitter.configs")
-    
-    configs.setup({
-      ensure_installed = { 
-        "c", "lua", "vim", "vimdoc", "query", 
-        "spectec" -- Add spectec to the list
-      },
-      sync_install = false,
-      highlight = { enable = true },
-      indent = { enable = true },
-    })
+{ "KunJeong/tree-sitter-spectec", build = "make parser" }
+```
 
-    -- Configure the spectec parser
-    local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-    parser_config.spectec = {
-      install_info = {
-        url = "https://github.com/KunJeong/tree-sitter-spectec", -- Replace with your repo
-        files = { "src/parser.c" },
-        branch = "main",
-        generate_requires_npm = false,
-        requires_generate_from_grammar = false,
-      },
-      filetype = "spectec",
-    }
+With **packer.nvim**:
 
-    -- Register file extensions
-    vim.filetype.add({
-      extension = {
-        spectec = "spectec",
-        watsup = "spectec",
-      },
-    })
-  end
+```lua
+use { "KunJeong/tree-sitter-spectec", run = "make parser" }
+```
+
+`build`/`run` compiles `parser/spectec.so` from the committed `src/parser.c`. Open a `.spectec` or `.watsup` file and highlighting starts automatically; `:InspectTree` shows the parse tree.
+
+#### Without a plugin manager
+
+```bash
+git clone https://github.com/KunJeong/tree-sitter-spectec
+cd tree-sitter-spectec && make parser
+```
+
+Then add the checkout to your runtimepath, e.g. in `init.lua`:
+
+```lua
+vim.opt.runtimepath:append("/path/to/tree-sitter-spectec")
+```
+
+#### Alternative: let nvim-treesitter build the parser
+
+If you already manage parsers with nvim-treesitter (the `master` branch), skip the `build` step and register the grammar instead:
+
+```lua
+require("nvim-treesitter.parsers").get_parser_configs().spectec = {
+  install_info = {
+    url = "https://github.com/KunJeong/tree-sitter-spectec",
+    files = { "src/parser.c" },
+    branch = "main",
+    generate_requires_npm = false,
+    requires_generate_from_grammar = false,
+  },
+  filetype = "spectec",
 }
 ```
 
-#### Packer.nvim
+Then `:TSInstall spectec`. The plugin still supplies the filetypes and queries.
 
-```lua
-use {
-  'nvim-treesitter/nvim-treesitter',
-  run = ':TSUpdate',
-  config = function()
-    -- Same configuration as above
-  end
-}
-```
+#### Customizing highlights
 
-#### Plug (vim-plug)
-
-```vim
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-
-" Add this to your init.vim or init.lua
-lua << EOF
--- Same Lua configuration as above
-EOF
-```
-
-### Installing the Parser
-
-After adding the configuration:
-
-1. **Restart Neovim**
-2. **Install the parser:**
-   ```
-   :TSInstall spectec
-   ```
-3. **Verify installation:**
-   Open a `.spectec` or `.watsup` file, select a node and run `:InspectTree`
-
-### Setting up Syntax Highlighting
-
-The syntax highlighting queries are included in this repository. They will be automatically loaded when you install the parser. 
-
-If you want to customize the highlighting, you can override the queries by creating files in your Neovim configuration:
-
-```
-~/.config/nvim/queries/spectec/highlights.scm
-```
+Highlighting works out of the box once the plugin is installed and the parser built. To override it, drop your own file at `~/.config/nvim/queries/spectec/highlights.scm`.
 
 ## Development
 
@@ -172,10 +132,16 @@ npx tree-sitter parse test/spec-impty/base.spectec
 ├── grammar.js              # Tree-sitter grammar definition
 ├── src/
 │   ├── parser.c            # Generated parser (don't edit manually)
-│   ├── tree_sitter/        # Generated headers
+│   └── tree_sitter/        # Generated headers
 ├── queries/
-│   └── highlights.scm      # Syntax highlighting queries
+│   └── spectec/
+│       └── highlights.scm  # Syntax highlighting queries
+├── plugin/
+│   └── spectec.lua         # Neovim: filetype detection
+├── ftplugin/
+│   └── spectec.lua         # Neovim: start highlighting for spectec buffers
 ├── scripts/
+│   ├── build-parser.sh     # Compile parser/spectec.so (the `make parser` step)
 │   └── dev-install.sh      # Development installation script
 └── README.md               # This file
 ```

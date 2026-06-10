@@ -75,6 +75,8 @@ __pycache__/
 
 # Tree-sitter generated files
 parser.so
+# Compiled parser for Neovim's native runtime (built by `make parser`)
+/parser/
 
 # Vendored SpecTecX reference sources (regenerate: npm run sync-references).
 # Only the SOURCE pin is tracked; the copies are reproducible.

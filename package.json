@@ -11,7 +11,7 @@
   "tree-sitter": [
     {
       "file-types": ["watsup", "spectec"],
-      "highlights": ["queries/highlights.scm"]
+      "highlights": ["queries/spectec/highlights.scm"]
     }
   ]
 }

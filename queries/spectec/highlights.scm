@@ -6,7 +6,7 @@
 (if_premise "if" @keyword)
 
 [ "(" "`(" "`{" "[" "`[" "`<" ] @punctuation.bracket.open
-[ ")" "}" "]" "`)" "`}" "`]" "`>" ] @punctuation.bracket.close
+[ ")" "]" "`)" "`}" "`]" "`>" ] @punctuation.bracket.close
 (type_parameters ["<" ">"] @punctuation.bracket.angle)
 
 [":" "," "." "|" "/"] @punctuation.delimiter
