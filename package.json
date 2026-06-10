@@ -1,11 +1,12 @@
 {
   "scripts": {
     "check": "scripts/check.sh",
+    "check-generated": "scripts/check-generated.sh",
     "sync-references": "scripts/sync-references.sh",
     "test": "tree-sitter test"
   },
   "dependencies": {
-    "tree-sitter-cli": "^0.25.5"
+    "tree-sitter-cli": "0.25.5"
   },
   "tree-sitter": [
     {

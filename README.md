@@ -105,8 +105,7 @@ If you want to customize the highlighting, you can override the queries by creat
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (for tree-sitter CLI)
-- [tree-sitter CLI](https://tree-sitter.github.io/tree-sitter/creating-parsers#installation)
+- [Node.js](https://nodejs.org/) — `npm install` provides the pinned tree-sitter CLI
 - A C compiler (gcc, clang, etc.)
 
 ### Setting up for Development
@@ -117,20 +116,21 @@ If you want to customize the highlighting, you can override the queries by creat
    cd tree-sitter-spectec
    ```
 
-2. **Install tree-sitter CLI if you haven't:**
+2. **Install dependencies:**
    ```bash
-   npm install -g tree-sitter-cli
+   npm install
    ```
+   This installs the pinned `tree-sitter` CLI locally. Run it with `npx tree-sitter`, or use the `npm run` scripts below.
 
 3. **Generate the parser:**
    ```bash
-   tree-sitter generate
+   npx tree-sitter generate
    ```
 
 4. **Test the parser:**
    ```bash
-   tree-sitter test
-   tree-sitter parse examples/test.spectec
+   npm test
+   npx tree-sitter parse test/spec-impty/base.spectec
    ```
 
 ### Development Workflow
@@ -153,14 +153,17 @@ After running either command, restart Neovim or run `:TSBufToggle` to see your c
 Test your changes with:
 
 ```bash
-# Test basic parsing
-tree-sitter test
+# Run the corpus tests
+npm test
 
-# Parse specific files
-tree-sitter parse spec-mini/2c1-runtime-type.watsup
+# Parse the fixtures and report errors (add --live to sweep the real spec tree)
+npm run check
 
-# Generate and inspect parse tree
-tree-sitter parse --debug examples/test.spectec
+# Verify the committed parser still matches grammar.js
+npm run check-generated
+
+# Parse and inspect a specific file
+npx tree-sitter parse test/spec-impty/base.spectec
 ```
 
 ## File Structure
@@ -182,7 +185,7 @@ tree-sitter parse --debug examples/test.spectec
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes to `grammar.js`
-4. Test with `tree-sitter test` and `tree-sitter parse`
+4. Test with `npm test` and `npm run check-generated`
 5. Update queries if needed
 6. Submit a pull request
 
