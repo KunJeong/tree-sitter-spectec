@@ -775,16 +775,19 @@ module.exports = grammar({
 
     // -------------------------
     // IDENTIFIERS
-    // ------------------------- 
-    // Single-letter variables with optional subscripts: C, C_0, E_1, D_2  
-    // Lexical precedence breaks ties when several id tokens match the same text:
-    // a single capital (with optional subscript) is a variable, an all-caps word
-    // is a keyword atom / constructor, and anything else uppercase is a name.
-    single_letter_var: $ => token(prec(2, /[A-Z](?:_\d+)?/)),
+    // -------------------------
+    // A single capital with subscripts/primes (K, C_0, K_h, K_query) is a
+    // variable; an all-caps WORD (two leading capitals: INT, SKIP) is a keyword
+    // atom / constructor; anything else uppercase is a name. single_letter_var
+    // keeps default precedence so the longer multi_caps_id / uppercase_id win
+    // for multi-letter words -- otherwise a high prec would split `INT` into
+    // single capitals. It still beats uppercase_id at equal length (it is
+    // listed first), so `K` and `K_h` stay variables.
+    single_letter_var: $ => token(/[A-Z](?:'|_[A-Za-z0-9']+)*/),
 
     uppercase_id: $ => /[A-Z][a-zA-Z0-9_']*/, // Any uppercase-starting identifier
     lowercase_id: $ => /[a-z][a-zA-Z0-9_']*/, // Starting with lowercase, hyphens not allowed
-    multi_caps_id: $ => token(prec(1, /[A-Z][A-Z0-9_']+/)),  // At least 2 chars, all caps
+    multi_caps_id: $ => token(prec(1, /[A-Z][A-Z][A-Z0-9_']*/)),  // All-caps word, 2+ leading capitals
 
     rule_id: $ => /[a-z][a-z0-9_'-]*/, // Rule IDs can have hyphens like "rets-none", "expracce-headert"
     relation_id: $ => $.uppercase_id,
