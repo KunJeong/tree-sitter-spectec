@@ -2,7 +2,7 @@
 
 builtin generator $functions_prog : prog
 
-property Type_safety
-  hint(generator $functions_prog) :
+property Type_safety:
   Eval_prog: |- prog -| _
   -- Check_prog: |- prog
+  hint(generator $functions_prog)

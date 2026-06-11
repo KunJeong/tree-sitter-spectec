@@ -112,3 +112,47 @@ relation Eval_expr:
         (base_type
           (syntax_id
             (lowercase_id)))))))
+
+==================
+property: trailing generator hint
+==================
+
+property Type_safety:
+  Eval_prog: |- prog -| _
+  -- Check_prog: |- prog
+  hint(generator $functions_prog)
+
+---
+
+(source_file
+  (property_definition
+    name: (relation_id
+      (uppercase_id))
+    conclusion: (rule_premise
+      relation_name: (relation_id
+        (uppercase_id))
+      body: (notation_rel
+        left: (notation_seq
+          (notation_atom
+            (atom
+              (atom_relational)))
+          (notation_atom
+            (regular_id
+              (lowercase_id))))
+        operator: (atom_relational)
+        right: (notation_seq
+          (notation_atom
+            (wildcard_pattern)))))
+    premises: (rule_premise
+      relation_name: (relation_id
+        (uppercase_id))
+      body: (notation_seq
+        (notation_atom
+          (atom
+            (atom_relational)))
+        (notation_atom
+          (regular_id
+            (lowercase_id)))))
+    hints: (hint
+      (hint_name)
+      (hint_function_id))))

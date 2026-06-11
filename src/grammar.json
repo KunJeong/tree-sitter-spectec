@@ -560,17 +560,6 @@
           }
         },
         {
-          "type": "FIELD",
-          "name": "hints",
-          "content": {
-            "type": "REPEAT",
-            "content": {
-              "type": "SYMBOL",
-              "name": "hint"
-            }
-          }
-        },
-        {
           "type": "STRING",
           "value": ":"
         },
@@ -603,6 +592,17 @@
                   "value": "\n"
                 }
               ]
+            }
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "hints",
+          "content": {
+            "type": "REPEAT",
+            "content": {
+              "type": "SYMBOL",
+              "name": "hint"
             }
           }
         }

@@ -127,14 +127,15 @@ module.exports = grammar({
       field("type", $.type),
     ),
 
-    // `property Id hint* : conclusion -- prem*` is a quickcheck property.
+    // `property Id : conclusion -- prem* hint*` is a quickcheck property.
+    // Hints are written at the tail, like relation declarations.
     property_definition: $ => seq(
       'property',
       field("name", $.relation_id),
-      field("hints", repeat($.hint)),
       ':',
       field("conclusion", $.rule_premise),
       field("premises", repeat(seq('--', $.premise, '\n'))),
+      field("hints", repeat($.hint)),
     ),
 
     separator: $ => '----',
