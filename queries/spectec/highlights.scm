@@ -1,12 +1,18 @@
 ; highlights.scm
 
-[ "syntax" "var" "relation" "rule" "dec" "def" "if" "hint" ] @keyword
+[ "syntax" "var" "relation" "rule" "dec" "def" "if" "hint" "property" ] @keyword
 "--" @keyword
 (else_premise) @keyword
 (if_premise "if" @keyword)
+; `generator` is a keyword only in `builtin generator`; as a hint name it stays
+; a hint name (see hint_name below).
+(builtin_generator_declaration ["builtin" "generator"] @keyword)
 
-[ "(" "`(" "`{" "[" "`[" "`<" ] @punctuation.bracket.open
-[ ")" "]" "`)" "`}" "`]" "`>" ] @punctuation.bracket.close
+; Meta grouping brackets are punctuation; backtick (target) brackets are
+; concrete object syntax, so they highlight like keyword/operator atoms below.
+[ "(" "[" ] @punctuation.bracket.open
+[ ")" "]" ] @punctuation.bracket.close
+[ "`(" "`)" "`[" "`]" "`{" "`}" "`<" "`>" ] @tag
 (type_parameters ["<" ">"] @punctuation.bracket.angle)
 
 [":" "," "." "|" "/"] @punctuation.delimiter
@@ -19,7 +25,7 @@
 ; Variables and parameters - non-conflicting approach
 ; --------
 
-(variable_definition name: (syntax_id) @variable)
+(variable_definition name: (syntax_id) @variable.parameter)
 
 ; ONLY function parameters are highlighted as parameters
 (value_pattern (regular_id) @variable.parameter)
@@ -30,13 +36,13 @@
  (#not-has-ancestor? @variable.parameter rule_premise)
  (#not-has-ancestor? @variable.parameter expression))
 
-; ONLY variables in rule premises are regular variables  
-((regular_id) @variable
- (#has-ancestor? @variable rule_premise))
+; Variable USES (in premises and expressions) get their own color, distinct
+; from the binding sites above.
+((regular_id) @variable.member
+ (#has-ancestor? @variable.member rule_premise))
 
-; ONLY variables in expressions are regular variables
-((regular_id) @variable
- (#has-ancestor? @variable expression))
+((regular_id) @variable.member
+ (#has-ancestor? @variable.member expression))
 
 ((regular_id) @variable.parameter
  (#has-ancestor? @variable.parameter constructor_pattern_arg))
@@ -50,6 +56,8 @@
 (relation_declaration name: (relation_id) @function)
 (rule_definition relation_name: (relation_id) @function)
 (rule_premise relation_name: (relation_id) @function)
+(builtin_generator_declaration name: (function_id) @function)
+(property_definition name: (relation_id) @function)
 
 ; Types
 ; --------
@@ -61,15 +69,14 @@
 (type_parameters (lowercase_id) @type)
 (type) @type
 
-; Operators from notation expressions
-(atom) @operator
+; Built-in notation atoms (arrow, turnstile, colon, ...) are meta operators.
 (atom_infix) @operator
 (atom_relational) @operator
-(operator) @operator
-
-; Notation expression components
 (notation_rel operator: (_) @operator)
 (notation_bin operator: (_) @operator)
+
+; Single-quoted operators are concrete object syntax: render like the atoms below.
+(operator) @tag
 
 (hint_name) @function.builtin
 
@@ -87,11 +94,10 @@
 (hint_function_id) @string      ; Function ids in hints treated as hint text
 (epsilon_literal) @constant
 
-; Constructors
-; --------
-(constructor_id) @constructor
-(constructor_notation name: (constructor_id) @constructor)
-
-; Tags (abstract words) override the surrounding constructor capture.
-(tag) @tag
+; All object-syntax atoms -- keyword atoms (INT, IF), operators, brackets, and
+; abstract tags (_NUM) -- share @tag. It is the group most reliably distinct
+; from @type (non-terminals) across themes; @constructor collides with @type in
+; some (e.g. Catppuccin), which would erase the constructor-vs-non-terminal
+; split that matters most. tag is a child of constructor_id, so this covers it.
+(constructor_id) @tag
 
