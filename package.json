@@ -1,11 +1,16 @@
 {
+  "name": "tree-sitter-spectec",
+  "version": "0.1.0",
   "scripts": {
+    "install": "node-gyp-build",
     "check": "scripts/check.sh",
     "check-generated": "scripts/check-generated.sh",
     "sync-references": "scripts/sync-references.sh",
     "test": "tree-sitter test"
   },
   "dependencies": {
+    "node-addon-api": "8.8.0",
+    "node-gyp-build": "4.8.4",
     "tree-sitter-cli": "0.25.5"
   },
   "tree-sitter": [
